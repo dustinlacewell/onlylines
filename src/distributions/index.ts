@@ -17,10 +17,22 @@ export { sineWave, standingWave, interference } from './wave';
 export { bilateral, rotationalSymmetry, kaleidoscope } from './symmetry';
 
 // Grid distributions
-export { grid, woven } from './grid';
+export { horizontal, vertical, diagonal, parallel, grid, woven } from './grid';
 
 // Mathematical distributions
-export { lissajous, roseCurve, modularPattern } from './mathematical';
+export {
+  lissajous,
+  roseCurve,
+  modularPattern,
+  epicycloid,
+  hypocycloid,
+  spirograph,
+  fermatSpiral,
+  harmonograph,
+  chladni,
+  guilloche,
+  flowerOfLife,
+} from './mathematical';
 
 // Special distributions
 export { opposing, vortex, web } from './special';
@@ -31,31 +43,63 @@ import { concentricRings, nestedPolygons } from './concentric';
 import { spiral, doubleSpiral, goldenSpiral, sunflower } from './spiral';
 import { sineWave, standingWave, interference } from './wave';
 import { bilateral, rotationalSymmetry, kaleidoscope } from './symmetry';
-import { grid, woven } from './grid';
-import { lissajous, roseCurve, modularPattern } from './mathematical';
+import { horizontal, vertical, diagonal, parallel, grid, woven } from './grid';
+import {
+  lissajous,
+  roseCurve,
+  modularPattern,
+  epicycloid,
+  hypocycloid,
+  spirograph,
+  fermatSpiral,
+  harmonograph,
+  chladni,
+  guilloche,
+  flowerOfLife,
+} from './mathematical';
 import { opposing, vortex, web } from './special';
 
 export const Distributions = {
+  // Radial
   star,
   starBurst,
   symmetricSpokes,
+  // Concentric
   concentricRings,
   nestedPolygons,
+  // Spiral
   spiral,
   doubleSpiral,
   goldenSpiral,
   sunflower,
+  // Wave
   sineWave,
   standingWave,
   interference,
+  // Symmetry
   bilateral,
   rotationalSymmetry,
   kaleidoscope,
+  // Grid
+  horizontal,
+  vertical,
+  diagonal,
+  parallel,
   grid,
   woven,
+  // Mathematical
   lissajous,
   roseCurve,
   modularPattern,
+  epicycloid,
+  hypocycloid,
+  spirograph,
+  fermatSpiral,
+  harmonograph,
+  chladni,
+  guilloche,
+  flowerOfLife,
+  // Special
   opposing,
   vortex,
   web,

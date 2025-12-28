@@ -143,26 +143,14 @@ export {
 
 // Position evolvers
 export {
-  // Basic
   rotate,
-  rotateBreathing,
-  rotateReversing,
-  // Breathing
   breathe as breathePosition,
-  breatheWavePattern,
-  // Oscillation
   oscillate,
-  oscillateWave,
-  // Drift
-  drift,
-  driftWander,
-  // Pulse
   pulse as pulsePosition,
-  // Spiral/vortex
-  spiral,
-  vortex,
-  // Physics
   waveInterference,
+  lissajous,
+  pendulum as pendulumPosition,
+  billiards,
 } from './position';
 
 // Color evolvers

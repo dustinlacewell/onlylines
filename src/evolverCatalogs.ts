@@ -33,29 +33,14 @@ export interface ColorAnimationEntry {
 
 // Position evolvers catalog
 export const positionEvolvers: EvolverEntry<PositionEvolver>[] = [
-  // Basic
   { name: 'rotate', create: () => Position.rotate(rand(0.03, 0.15)) },
-  { name: 'rotateBreathing', create: () => Position.rotateBreathing(rand(0.05, 0.12), rand(0.03, 0.08), rand(0.15, 0.4)) },
-  { name: 'rotateReversing', create: () => Position.rotateReversing(rand(0.08, 0.2), rand(3, 8)) },
-  { name: 'breathe', create: () => Position.breathe(rand(0.15, 0.4), rand(0.1, 0.3)) },
-  { name: 'breatheWavePattern', create: () => Position.breatheWavePattern(rand(0.1, 0.25), rand(0.1, 0.25), rand(0.3, 0.8)) },
-  { name: 'oscillate', create: () => Position.oscillate(rand(0.15, 0.4), rand(0.15, 0.35)) },
-  { name: 'oscillateWave', create: () => Position.oscillateWave(rand(0.1, 0.25), rand(0.15, 0.3), pick([1, 2, 3, 4])) },
-  { name: 'drift', create: () => Position.drift(rand(0.02, 0.06)) },
-  { name: 'driftWander', create: () => Position.driftWander(rand(0.03, 0.08), rand(0.05, 0.15)) },
+  { name: 'breathe', create: () => Position.breathe(rand(0.15, 0.4), rand(0.1, 0.3), rand(0.2, 0.8)) },
+  { name: 'oscillate', create: () => Position.oscillate(rand(0.15, 0.4), rand(0.15, 0.35), pick([1, 2, 3])) },
   { name: 'pulse', create: () => Position.pulse(rand(0.02, 0.05), rand(0.1, 0.25), rand(0.3, 0.8)) },
-  { name: 'spiral', create: () => Position.spiral(rand(0.05, 0.15), rand(0.03, 0.1)) },
-  { name: 'vortex', create: () => Position.vortex(rand(0.1, 0.25), rand(0.02, 0.08)) },
   { name: 'waveInterference', create: () => Position.waveInterference(rand(0.1, 0.3), rand(0.15, 0.4), rand(0.2, 0.5)) },
-  // Fancy
   { name: 'lissajous', create: () => Position.lissajous(pick([2, 3, 4, 5]), pick([2, 3, 4, 5]), rand(0.1, 0.25), rand(0.05, 0.2), rand(0, Math.PI)) },
-  { name: 'coupled', create: () => Position.coupled(rand(0.05, 0.2), rand(0.1, 0.3), rand(0.01, 0.05)) },
-  { name: 'elastic', create: () => Position.elastic(rand(0.3, 0.8), rand(0.05, 0.2), pick([2, 3, 4, 5])) },
-  { name: 'rose', create: () => Position.rose(pick([3, 4, 5, 6, 7]), pick([2, 3, 4, 5]), rand(0.1, 0.25), rand(0.05, 0.15)) },
-  { name: 'pendulum', create: () => Position.pendulum(rand(0.3, 0.8), rand(0.2, 0.5), rand(0.01, 0.05)) },
-  { name: 'flocking', create: () => Position.flocking(rand(0.5, 1), rand(0.3, 0.7), rand(0.2, 0.5), rand(0.1, 0.3)) },
-  { name: 'attractor', create: () => Position.attractor(rand(0.3, 0.8), rand(0.2, 0.5), rand(0.05, 0.2)) },
-  { name: 'chaotic', create: () => Position.chaotic(rand(0.2, 0.5), rand(0.3, 0.7), rand(0.05, 0.2), rand(0.1, 0.3)) },
+  { name: 'pendulum', create: () => Position.pendulum(rand(0.3, 0.8), rand(0.2, 0.5), rand(0.2, 0.8)) },
+  { name: 'billiards', create: () => Position.billiards(rand(0.01, 0.04), rand(0.2, 0.5)) },
 ];
 
 // Palette catalog - all available color palettes

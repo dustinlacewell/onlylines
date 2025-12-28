@@ -406,11 +406,22 @@ export const useEvolverStore = create<EvolverStore>()((set, get) => ({
       [0.2, 0.35, 0.25, 0.15, 0.05]
     );
 
-    // Pick 1-2 position evolvers with random params
+    // Pick 1-2 unique position evolvers with random params
     const numPos = pick([1, 2]);
     const posEvolvers: PositionEvolverState[] = [];
+    const usedTypes = new Set<string>();
     for (let i = 0; i < numPos; i++) {
-      posEvolvers.push(randomPositionEvolver());
+      let evolver = randomPositionEvolver();
+      // Avoid duplicates - try up to 5 times to get a unique type
+      let attempts = 0;
+      while (usedTypes.has(evolver.type) && attempts < 5) {
+        evolver = randomPositionEvolver();
+        attempts++;
+      }
+      if (!usedTypes.has(evolver.type)) {
+        usedTypes.add(evolver.type);
+        posEvolvers.push(evolver);
+      }
     }
 
     // Pick a random distribution with random params

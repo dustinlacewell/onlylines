@@ -67,6 +67,10 @@ export const distributionCatalog: Record<string, CatalogEntry> = {
   },
 
   // Grid
+  horizontal: { params: [] },
+  vertical: { params: [] },
+  diagonal: { params: [['direction', P.signedUnit]] }, // -1 or 1
+  parallel: { params: [['angle', P.byte]] }, // 0-255 maps to 0-180 degrees
   grid: { params: [] },
   woven: { params: [] },
 
@@ -84,6 +88,46 @@ export const distributionCatalog: Record<string, CatalogEntry> = {
   modularPattern: {
     params: [['multiplier', P.smallInt]], // 2-13
   },
+  epicycloid: {
+    params: [['cusps', P.smallInt]], // 3-7 cusps
+  },
+  hypocycloid: {
+    params: [['points', P.smallInt]], // 3-8 points
+  },
+  spirograph: {
+    params: [
+      ['R', P.smallInt],     // outer circle radius (3-8)
+      ['r', P.smallInt],     // inner circle radius (1-3)
+      ['d', P.unit],         // pen distance (0.5-1.5 scaled to 0-1)
+    ],
+  },
+  fermatSpiral: {
+    params: [
+      ['arms', P.smallInt],      // number of arms (1-4)
+      ['tightness', P.smallInt], // tightness (1-3)
+    ],
+  },
+  harmonograph: {
+    params: [
+      ['freqRatio', P.smallInt], // frequency ratio (2-5)
+      ['decay', P.unit],         // decay rate (0.5-2 scaled)
+    ],
+  },
+  chladni: {
+    params: [
+      ['n', P.smallInt], // first mode (1-5)
+      ['m', P.smallInt], // second mode (1-5)
+    ],
+  },
+  guilloche: {
+    params: [
+      ['waves', P.smallInt],      // wave components (2-4)
+      ['complexity', P.smallInt], // pattern complexity (3-8)
+    ],
+  },
+  flowerOfLife: {
+    params: [['rings', P.smallInt]], // concentric rings (2-4)
+  },
 
   // Special
   opposing: { params: [] },
@@ -98,32 +142,13 @@ export const distributionCatalog: Record<string, CatalogEntry> = {
 // === POSITION EVOLVERS ===
 
 export const positionEvolverCatalog: Record<string, CatalogEntry> = {
-  // Basic rotation
+  // Rotation - endpoints travel around perimeter
   rotate: {
     params: [['speed', P.speed]],
   },
-  rotateBreathing: {
-    params: [
-      ['baseSpeed', P.speed],
-      ['speedVariation', P.smallUnit],
-      ['breatheSpeed', P.speed],
-    ],
-  },
-  rotateReversing: {
-    params: [
-      ['speed', P.speed],
-      ['reversePeriod', P.smallInt],
-    ],
-  },
 
-  // Breathing (line length changes)
+  // Breathing - line length changes (endpoints move toward/away from each other)
   breathe: {
-    params: [
-      ['amplitude', P.smallUnit],
-      ['speed', P.speed],
-    ],
-  },
-  breatheWavePattern: {
     params: [
       ['amplitude', P.smallUnit],
       ['speed', P.speed],
@@ -131,14 +156,8 @@ export const positionEvolverCatalog: Record<string, CatalogEntry> = {
     ],
   },
 
-  // Oscillation (line slides)
+  // Oscillation - whole line slides back and forth
   oscillate: {
-    params: [
-      ['amplitude', P.smallUnit],
-      ['speed', P.speed],
-    ],
-  },
-  oscillateWave: {
     params: [
       ['amplitude', P.smallUnit],
       ['speed', P.speed],
@@ -146,18 +165,7 @@ export const positionEvolverCatalog: Record<string, CatalogEntry> = {
     ],
   },
 
-  // Drift
-  drift: {
-    params: [['speed', P.speed]],
-  },
-  driftWander: {
-    params: [
-      ['speed', P.speed],
-      ['wanderSpeed', P.speed],
-    ],
-  },
-
-  // Pulse
+  // Pulse - periodic bursts that create rolling wave effects
   pulse: {
     params: [
       ['strength', P.smallUnit],
@@ -166,21 +174,7 @@ export const positionEvolverCatalog: Record<string, CatalogEntry> = {
     ],
   },
 
-  // Spiral/Vortex
-  spiral: {
-    params: [
-      ['rotationSpeed', P.speed],
-      ['contractionSpeed', P.speed],
-    ],
-  },
-  vortex: {
-    params: [
-      ['orbitSpeed', P.speed],
-      ['wobble', P.smallUnit],
-    ],
-  },
-
-  // Complex patterns
+  // Wave interference - two frequencies create beating patterns
   waveInterference: {
     params: [
       ['freq1', P.speed],
@@ -189,8 +183,7 @@ export const positionEvolverCatalog: Record<string, CatalogEntry> = {
     ],
   },
 
-  // === NEW FANCY EVOLVERS ===
-
+  // Lissajous - complex orbital patterns from frequency ratios
   lissajous: {
     params: [
       ['freqX', P.smallInt],
@@ -200,56 +193,21 @@ export const positionEvolverCatalog: Record<string, CatalogEntry> = {
       ['phase', P.angle],
     ],
   },
-  coupled: {
-    params: [
-      ['coupling', P.smallUnit],
-      ['naturalFreq', P.speed],
-      ['damping', P.smallUnit],
-    ],
-  },
-  elastic: {
-    params: [
-      ['stiffness', P.unit],
-      ['damping', P.smallUnit],
-      ['radius', P.smallInt],
-    ],
-  },
-  rose: {
-    params: [
-      ['n', P.smallInt],
-      ['d', P.smallInt],
-      ['amplitude', P.smallUnit],
-      ['speed', P.speed],
-    ],
-  },
+
+  // Pendulum - physical pendulum motion with gravity (perpetual, no damping)
   pendulum: {
     params: [
       ['length', P.unit],
       ['gravity', P.speed],
-      ['damping', P.smallUnit],
+      ['phaseSpread', P.unit],
     ],
   },
-  flocking: {
+
+  // Billiards - elastic collision simulation between endpoints
+  billiards: {
     params: [
-      ['separation', P.unit],
-      ['alignment', P.unit],
-      ['cohesion', P.unit],
-      ['maxSpeed', P.speed],
-    ],
-  },
-  attractor: {
-    params: [
-      ['strength', P.signedUnit],
-      ['falloff', P.unit],
-      ['orbitSpeed', P.speed],
-    ],
-  },
-  chaotic: {
-    params: [
-      ['sigma', P.speed],
-      ['rho', P.speed],
-      ['beta', P.smallUnit],
-      ['scale', P.unit],
+      ['speed', P.speed],
+      ['speedVariation', P.unit],
     ],
   },
 };
@@ -261,13 +219,13 @@ export const positionEvolverCatalog: Record<string, CatalogEntry> = {
 export const mapperCatalog: Record<string, CatalogEntry> = {
   // Wave
   identity: { params: [] },
-  sine: { params: [['frequency', P.speed], ['phase', P.unit]] },
+  sine: { params: [['frequency', P.frequency], ['phase', P.unit]] },
   triangle: { params: [] },
 
   // Pulse
-  threshold: { params: [['cutoff', P.unit]] },
-  step: { params: [['cutoff', P.unit]] }, // alias for threshold
-  pulse: { params: [['center', P.unit], ['width', P.smallUnit]] },
+  threshold: { params: [['cutoff', P.unit], ['invert', P.bool]] },
+  step: { params: [['cutoff', P.unit], ['invert', P.bool]] }, // alias for threshold
+  pulse: { params: [['center', P.unit], ['width', P.smallUnit], ['sharpness', P.sharpness8]] },
   spot: { params: [['width', P.smallUnit]] },
   spotLinear: { params: [['width', P.smallUnit]] },
 
@@ -277,13 +235,13 @@ export const mapperCatalog: Record<string, CatalogEntry> = {
   easeInOut: { params: [['power', P.smallInt]] },
 
   // Noise
-  noise: { params: [['scale', P.unit]] },
+  noise: { params: [['scale', P.scale5]] },
   shimmer: { params: [['frequency', P.smallInt], ['intensity', P.smallUnit]] },
   flicker: { params: [['speed', P.smallInt], ['intensity', P.smallUnit]] },
 
   // Harmonic
   harmonic: { params: [['harmonics', P.smallInt]] },
-  interference: { params: [['ratio', P.unit], ['phase', P.unit]] },
+  interference: { params: [['ratio', P.ratio3], ['phase', P.unit]] },
   pendulum: { params: [] },
   wavePacket: { params: [['frequency', P.smallInt], ['width', P.unit], ['center', P.unit]] },
   counterFlow: { params: [['speed', P.smallUnit], ['frequency', P.smallInt]] },

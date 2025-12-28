@@ -68,6 +68,30 @@ export const angle: ParamType = {
   decode: b => (b / 255) * 2 * Math.PI,
 };
 
+// Linear 0-10, good for higher frequencies
+export const frequency: ParamType = {
+  encode: v => Math.round((v / 10) * 255),
+  decode: b => (b / 255) * 10,
+};
+
+// Linear 0-5, good for scales/multipliers
+export const scale5: ParamType = {
+  encode: v => Math.round((v / 5) * 255),
+  decode: b => (b / 255) * 5,
+};
+
+// Linear 1-3, for ratios like interference ratio
+export const ratio3: ParamType = {
+  encode: v => Math.round(((v - 1) / 2) * 255),
+  decode: b => (b / 255) * 2 + 1,
+};
+
+// Linear 1-8 with 0.5 resolution, for sharpness values
+export const sharpness8: ParamType = {
+  encode: v => Math.round(((v - 1) / 7) * 255),
+  decode: b => (b / 255) * 7 + 1,
+};
+
 // Shorthand export for catalog definitions
 export const P = {
   unit,
@@ -80,4 +104,8 @@ export const P = {
   enum: enumType,
   signedUnit,
   angle,
+  frequency,
+  scale5,
+  ratio3,
+  sharpness8,
 };
