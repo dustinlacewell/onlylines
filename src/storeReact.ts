@@ -8,17 +8,29 @@ import {
   presets,
   type PresetName,
 } from './evolvers/evolverFactory';
-import { mapperCatalog as mapperCatalogReal } from './evolvers/mapperCatalog';
-import { palettes } from './evolvers/palettes';
-import { Distributions } from './distributions/index';
 import { rand, randInt, pick, pickW, newSeed, setSeed } from './random';
-import { positionEvolverCatalog, distributionCatalog, getCatalogNames } from './catalogs';
 import type { PositionEvolverState, DistributionState } from './serialize';
 
-const mapperNames = Object.keys(mapperCatalogReal);
-const paletteNames = Object.keys(palettes);
-const distributionNames = Object.keys(Distributions);
-const positionEvolverNames = getCatalogNames(positionEvolverCatalog);
+// Import registrations to ensure all entities are registered
+import './placers';
+import './movers';
+import './mappers';
+import './palettes';
+
+// Import registry functions
+import {
+  getAllMovers,
+  getAllMappers,
+  getAllPalettes,
+  getAllPlacers,
+  randomizeMover,
+  randomizePlacer,
+} from './core';
+
+const mapperNames = getAllMappers().map(m => m.name);
+const paletteNames = getAllPalettes().map(p => p.name);
+const placerNames = getAllPlacers().map(p => p.name);
+const moverNames = getAllMovers().map(m => m.name);
 const motionModes: MotionMode[] = ['field', 'focal', 'spread'];
 const edgeBehaviors: EdgeBehavior[] = ['wrap', 'bounce'];
 
@@ -86,34 +98,16 @@ function randomLineWidthSlot(): SlotState<RangeOutput> {
   };
 }
 
-// Generate random params for a position evolver based on its catalog entry
+// Generate random params for a position evolver (mover) based on registry
 function randomPositionEvolver(): PositionEvolverState {
-  const type = pick(positionEvolverNames);
-  const entry = positionEvolverCatalog[type];
-  const params: Record<string, number> = {};
-
-  for (const [paramName, paramType] of entry.params) {
-    // Generate a random value in the valid range for this param type
-    // Most params are 0-1 range, decode from random byte
-    const randomByte = Math.floor(rand(0, 256));
-    params[paramName] = paramType.decode(randomByte);
-  }
-
+  const type = pick(moverNames);
+  const params = randomizeMover(type);
   return { type, params };
 }
 
-// Generate random params for a distribution based on its catalog entry
+// Generate random params for a distribution (placer) based on registry
 function randomDistributionState(type: string): DistributionState {
-  const entry = distributionCatalog[type];
-  const params: Record<string, number> = {};
-
-  if (entry) {
-    for (const [paramName, paramType] of entry.params) {
-      const randomByte = Math.floor(rand(0, 256));
-      params[paramName] = paramType.decode(randomByte);
-    }
-  }
-
+  const params = randomizePlacer(type);
   return { type, params };
 }
 
@@ -424,8 +418,8 @@ export const useEvolverStore = create<EvolverStore>()((set, get) => ({
       }
     }
 
-    // Pick a random distribution with random params
-    const distType = pick(distributionNames);
+    // Pick a random distribution (placer) with random params
+    const distType = pick(placerNames);
     const distribution = randomDistributionState(distType);
 
     set({

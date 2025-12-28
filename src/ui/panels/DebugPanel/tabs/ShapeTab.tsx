@@ -1,9 +1,8 @@
 import { Section, Select, Row, Tooltip, Subsection, ParamEditor, Hint } from '../../../design';
 import { useEvolverStore, type DistributionState } from '../../../../storeReact';
-import { Distributions } from '../../../../distributions/index';
-import { distributionCatalog } from '../../../../catalogs';
+import { getAllPlacers, getPlacer, schemaToParamDefs } from '../../../../core';
 
-const distributionNames = Object.keys(Distributions);
+const distributionNames = getAllPlacers().map(p => p.name);
 
 const distributionTooltips: Record<string, string> = {
   // Radial
@@ -45,15 +44,17 @@ export function ShapeTab() {
   const setDistributionParams = useEvolverStore((state) => state.setDistributionParams);
 
   const tooltip = distributionTooltips[distribution.type] || 'Select a distribution pattern';
-  const catalogEntry = distributionCatalog[distribution.type];
-  const hasParams = catalogEntry && catalogEntry.params.length > 0;
+  const def = getPlacer(distribution.type);
+  const paramDefs = def ? schemaToParamDefs(def.params) : [];
+  const hasParams = paramDefs.length > 0;
 
   const handleTypeChange = (newType: string) => {
     // When changing type, initialize with default params
-    const entry = distributionCatalog[newType];
+    const placerDef = getPlacer(newType);
     const params: Record<string, number> = {};
-    if (entry) {
-      for (const [paramName, paramType] of entry.params) {
+    if (placerDef) {
+      const placerParamDefs = schemaToParamDefs(placerDef.params);
+      for (const [paramName, paramType] of placerParamDefs) {
         params[paramName] = paramType.decode(128); // Middle value
       }
     }
@@ -76,7 +77,7 @@ export function ShapeTab() {
       {hasParams && (
         <Subsection title="Parameters">
           <ParamEditor
-            paramDefs={catalogEntry.params}
+            paramDefs={paramDefs}
             values={distribution.params}
             onChange={setDistributionParams}
           />

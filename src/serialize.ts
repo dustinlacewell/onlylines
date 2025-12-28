@@ -1,24 +1,42 @@
 // Unified hex serialization for store state
 // Format: continuous hex string, no delimiters
-// Structure: {seed:8}{dist:2+params}{posCount:2}{pos1}{pos2}...{dash}{alpha}{color}{width}
+// Structure: {seed:8}{lineCount:4}{fade:2}{speed:2}{dist:id+params}{posCount:2}{pos1}{pos2}...{dash}{alpha}{color}{width}
 
+// Import registrations (side effects register all entities)
+import './placers';
+import './movers';
+import './mappers';
+import './palettes';
+
+// Import registry functions
 import {
-  distributionCatalog,
-  positionEvolverCatalog,
-  mapperCatalog,
-  paletteCatalog,
-  motionParamDefs,
-  getCatalogArray,
-  type ParamDef,
-  type CatalogEntry,
-} from './catalogs';
+  getPlacer,
+  getPlacerById,
+  getMover,
+  getMoverById,
+  getMapper,
+  getMapperById,
+  getPalette,
+  getPaletteById,
+  schemaToParamDefs,
+} from './core';
+
+import type { ParamType } from './paramTypes';
+import * as P from './paramTypes';
 import type { EvolverState, SlotState, DashOutput, RangeOutput, ColorOutput } from './storeReact';
 
-// Build arrays from catalogs (order matters for indices!)
-const distArray = getCatalogArray(distributionCatalog);
-const posArray = getCatalogArray(positionEvolverCatalog);
-const mapperArray = getCatalogArray(mapperCatalog);
-const paletteArray = getCatalogArray(paletteCatalog);
+export type ParamDef = [string, ParamType];
+
+// Motion parameters (internal to serialize.ts)
+export const motionParamDefs: ParamDef[] = [
+  ['mode', P.enumType(3)],      // field=0, focal=1, spread=2
+  ['edge', P.enumType(2)],      // wrap=0, bounce=1
+  ['speed', P.speed],
+  ['intensity', P.unit],
+  ['detail', P.unit],
+  ['reversed', P.bool],
+  ['alternate', P.bool],
+];
 
 // === ENCODING HELPERS ===
 
@@ -26,7 +44,6 @@ function encodeParams(params: ParamDef[], values: Record<string, unknown>): stri
   let hex = '';
   for (const [name, type] of params) {
     const v = (values[name] as number) ?? 0;
-    // Ensure byte is always an integer 0-255
     const byte = Math.max(0, Math.min(255, Math.floor(type.encode(v))));
     hex += byte.toString(16).padStart(2, '0');
   }
@@ -49,42 +66,90 @@ interface CatalogItem {
   params: Record<string, number>;
 }
 
-function encodeCatalogItem(
-  array: Array<{ name: string } & CatalogEntry>,
-  item: CatalogItem
-): string {
-  const idx = array.findIndex(e => e.name === item.type);
-  if (idx === -1) {
-    console.warn(`Unknown type: ${item.type}, using index 0`);
+// Encode placer by ID
+function encodePlacer(item: CatalogItem): string {
+  const def = getPlacer(item.type);
+  if (!def) {
+    console.warn(`Unknown placer: ${item.type}, using id 0`);
     return '00';
   }
-  const def = array[idx];
-  return idx.toString(16).padStart(2, '0') + encodeParams(def.params, item.params);
+  let hex = def.id.toString(16).padStart(2, '0');
+  const paramDefs = schemaToParamDefs(def.params);
+  hex += encodeParams(paramDefs, item.params);
+  return hex;
 }
 
-function decodeCatalogItem(
-  array: Array<{ name: string } & CatalogEntry>,
-  hex: string,
-  offset: number
-): { item: CatalogItem; nextOffset: number } {
-  const idx = parseInt(hex.slice(offset, offset + 2), 16);
-  const def = array[idx];
+// Decode placer by ID
+function decodePlacer(hex: string, offset: number): { item: CatalogItem; nextOffset: number } {
+  const id = parseInt(hex.slice(offset, offset + 2), 16);
+  const def = getPlacerById(id);
   if (!def) {
-    console.warn(`Unknown type index: ${idx}, using index 0`);
-    return { item: { type: array[0].name, params: {} }, nextOffset: offset + 2 };
+    console.warn(`Unknown placer id: ${id}`);
+    return { item: { type: 'star', params: {} }, nextOffset: offset + 2 };
   }
-  const { values, nextOffset } = decodeParams(def.params, hex, offset + 2);
+  const paramDefs = schemaToParamDefs(def.params);
+  const { values, nextOffset } = decodeParams(paramDefs, hex, offset + 2);
+  return { item: { type: def.name, params: values }, nextOffset };
+}
+
+// Encode mover by ID
+function encodeMover(item: CatalogItem): string {
+  const def = getMover(item.type);
+  if (!def) {
+    console.warn(`Unknown mover: ${item.type}, using id 0`);
+    return '00';
+  }
+  let hex = def.id.toString(16).padStart(2, '0');
+  const paramDefs = schemaToParamDefs(def.params);
+  hex += encodeParams(paramDefs, item.params);
+  return hex;
+}
+
+// Decode mover by ID
+function decodeMover(hex: string, offset: number): { item: CatalogItem; nextOffset: number } {
+  const id = parseInt(hex.slice(offset, offset + 2), 16);
+  const def = getMoverById(id);
+  if (!def) {
+    console.warn(`Unknown mover id: ${id}`);
+    return { item: { type: 'rotate', params: {} }, nextOffset: offset + 2 };
+  }
+  const paramDefs = schemaToParamDefs(def.params);
+  const { values, nextOffset } = decodeParams(paramDefs, hex, offset + 2);
+  return { item: { type: def.name, params: values }, nextOffset };
+}
+
+// Encode mapper by ID
+function encodeMapper(item: CatalogItem): string {
+  const def = getMapper(item.type);
+  if (!def) {
+    console.warn(`Unknown mapper: ${item.type}, using id 0`);
+    return '00';
+  }
+  let hex = def.id.toString(16).padStart(2, '0');
+  const paramDefs = schemaToParamDefs(def.params);
+  hex += encodeParams(paramDefs, item.params);
+  return hex;
+}
+
+// Decode mapper by ID
+function decodeMapper(hex: string, offset: number): { item: CatalogItem; nextOffset: number } {
+  const id = parseInt(hex.slice(offset, offset + 2), 16);
+  const def = getMapperById(id);
+  if (!def) {
+    console.warn(`Unknown mapper id: ${id}`);
+    return { item: { type: 'identity', params: {} }, nextOffset: offset + 2 };
+  }
+  const paramDefs = schemaToParamDefs(def.params);
+  const { values, nextOffset } = decodeParams(paramDefs, hex, offset + 2);
   return { item: { type: def.name, params: values }, nextOffset };
 }
 
 // === MOTION ENCODING ===
 
-// Motion mode/edge use strings in the store but need numeric indices for encoding
 const motionModes = ['field', 'focal', 'spread'] as const;
 const edgeBehaviors = ['wrap', 'bounce'] as const;
 
 function encodeMotion(m: Record<string, unknown>): string {
-  // Convert string mode/edge to numeric indices
   const normalized: Record<string, unknown> = {
     ...m,
     mode: typeof m.mode === 'string' ? motionModes.indexOf(m.mode as typeof motionModes[number]) : (m.mode ?? 0),
@@ -95,7 +160,6 @@ function encodeMotion(m: Record<string, unknown>): string {
 
 function decodeMotion(hex: string, offset: number): { values: Record<string, unknown>; nextOffset: number } {
   const { values: rawValues, nextOffset } = decodeParams(motionParamDefs, hex, offset);
-  // Convert numeric indices back to strings, and numbers to booleans
   return {
     values: {
       ...rawValues,
@@ -127,7 +191,6 @@ function decodeDashOutput(hex: string, offset: number): { values: DashOutput; ne
   };
 }
 
-// Alpha range: 0-1
 function encodeAlphaOutput(o: RangeOutput): string {
   return [Math.round(o.min * 255), Math.round(o.max * 255)]
     .map(v => Math.min(255, Math.max(0, v)).toString(16).padStart(2, '0'))
@@ -144,7 +207,6 @@ function decodeAlphaOutput(hex: string, offset: number): { values: RangeOutput; 
   };
 }
 
-// LineWidth range: 0-8 (typical values 0.3-4)
 function encodeLineWidthOutput(o: RangeOutput): string {
   return [Math.round(o.min * 32), Math.round(o.max * 32)]
     .map(v => Math.min(255, Math.max(0, v)).toString(16).padStart(2, '0'))
@@ -162,14 +224,19 @@ function decodeLineWidthOutput(hex: string, offset: number): { values: RangeOutp
 }
 
 function encodeColorOutput(o: ColorOutput): string {
-  const idx = paletteArray.findIndex(p => p.name === o.palette);
-  return (idx >= 0 ? idx : 0).toString(16).padStart(2, '0');
+  const def = getPalette(o.palette);
+  if (!def) {
+    console.warn(`Unknown palette: ${o.palette}, using id 0`);
+    return '00';
+  }
+  return def.id.toString(16).padStart(2, '0');
 }
 
 function decodeColorOutput(hex: string, offset: number): { values: ColorOutput; nextOffset: number } {
-  const idx = parseInt(hex.slice(offset, offset + 2), 16);
+  const id = parseInt(hex.slice(offset, offset + 2), 16);
+  const def = getPaletteById(id);
   return {
-    values: { palette: paletteArray[idx]?.name || 'sunset' },
+    values: { palette: def?.name || 'sunset' },
     nextOffset: offset + 2,
   };
 }
@@ -181,7 +248,7 @@ type OutputDecoder<T> = (hex: string, offset: number) => { values: T; nextOffset
 
 function encodeSlot<T>(slot: SlotState<T>, outputEncoder: OutputEncoder<T>): string {
   let hex = slot.enabled ? '1' : '0';
-  hex += encodeCatalogItem(mapperArray, {
+  hex += encodeMapper({
     type: slot.mapper,
     params: slot.mapperOptions as Record<string, number>,
   });
@@ -196,7 +263,7 @@ function decodeSlot<T>(
   outputDecoder: OutputDecoder<T>
 ): { slot: SlotState<T>; nextOffset: number } {
   const enabled = hex[offset] === '1';
-  const { item: mapper, nextOffset: o1 } = decodeCatalogItem(mapperArray, hex, offset + 1);
+  const { item: mapper, nextOffset: o1 } = decodeMapper(hex, offset + 1);
   const { values: motion, nextOffset: o2 } = decodeMotion(hex, o1);
   const { values: output, nextOffset: o3 } = outputDecoder(hex, o2);
   return {
@@ -240,15 +307,15 @@ export function serializeState(state: EvolverState): string {
   // Speed: 2 hex chars (8 bits, 0-255 maps to 0-3 range)
   hex += Math.round((state.speed / 3) * 255).toString(16).padStart(2, '0');
 
-  // Distribution: index + params
+  // Distribution: id + params (using placer registry)
   const dist = state.distribution as DistributionState;
-  hex += encodeCatalogItem(distArray, { type: dist.type, params: dist.params });
+  hex += encodePlacer({ type: dist.type, params: dist.params });
 
   // Position evolvers: count (2 chars) + each evolver
   const posEvolvers = state.positionEvolvers as PositionEvolverState[];
   hex += posEvolvers.length.toString(16).padStart(2, '0');
   for (const pos of posEvolvers) {
-    hex += encodeCatalogItem(posArray, pos);
+    hex += encodeMover(pos);
   }
 
   // Draw slots
@@ -280,8 +347,8 @@ export function deserializeState(hex: string): Partial<EvolverState> {
     const speed = (parseInt(hex.slice(offset, offset + 2), 16) / 255) * 3;
     offset += 2;
 
-    // Distribution (now with params)
-    const { item: dist, nextOffset: o1 } = decodeCatalogItem(distArray, hex, offset);
+    // Distribution
+    const { item: dist, nextOffset: o1 } = decodePlacer(hex, offset);
     const distribution: DistributionState = { type: dist.type, params: dist.params };
     offset = o1;
 
@@ -290,7 +357,7 @@ export function deserializeState(hex: string): Partial<EvolverState> {
     offset += 2;
     const positionEvolvers: PositionEvolverState[] = [];
     for (let i = 0; i < posCount; i++) {
-      const { item, nextOffset } = decodeCatalogItem(posArray, hex, offset);
+      const { item, nextOffset } = decodeMover(hex, offset);
       positionEvolvers.push(item);
       offset = nextOffset;
     }

@@ -1,6 +1,6 @@
 import React from 'react';
 import { ParamSlider } from './ParamSlider';
-import type { ParamDef } from '../../catalogs';
+import type { ParamDef } from '../../serialize';
 
 export interface ParamEditorProps {
   /** Param definitions from catalog entry */

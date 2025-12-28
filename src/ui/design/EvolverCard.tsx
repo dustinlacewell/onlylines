@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ParamEditor } from './ParamEditor';
-import type { ParamDef } from '../../catalogs';
+import type { ParamDef } from '../../serialize';
 
 export interface EvolverCardProps {
   /** Display name of the evolver */

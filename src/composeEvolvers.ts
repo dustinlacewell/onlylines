@@ -2,7 +2,7 @@
 import { rand, randInt, pick, pickW, setSeed, newSeed } from './random';
 import { World } from './world';
 import { Line } from './line';
-import { Distributions } from './distributions/index';
+import { createPlacer, getAllPlacers } from './placers';
 // URL serialization now handled in main.ts
 
 // Import catalogs
@@ -11,7 +11,6 @@ import {
   alphaEvolvers,
   lineWidthEvolvers,
   dashEvolvers,
-  distributionNames,
   paletteNames,
   colorAnimationNames,
   createColorEvolver,
@@ -61,7 +60,6 @@ export {
   alphaEvolvers,
   lineWidthEvolvers,
   dashEvolvers,
-  distributionNames,
   paletteNames,
   colorAnimationNames,
   paletteCatalog,
@@ -129,17 +127,18 @@ export function composeWorld(): World {
   );
   const count = sel.count ?? randomCount;
 
-  // Pick distribution - always call pick(), then use selection if provided
-  const randomDistro = pick(distributionNames);
+  // Pick distribution - use placer registry
+  const allPlacers = getAllPlacers();
+  const placerNames = allPlacers.map(p => p.name);
+  const randomDistro = pick(placerNames);
   const distState = sel.distribution;
-  const distroName = (distState && distributionNames.includes(distState.type as keyof typeof Distributions)
+  const distroName = distState && placerNames.includes(distState.type)
     ? distState.type
-    : randomDistro) as keyof typeof Distributions;
+    : randomDistro;
   const distroParams = distState?.type === distroName ? (distState.params ?? {}) : {};
-  const distro = Distributions[distroName];
 
-  // Create lines - let distribution handle its own random calls for PRNG consistency
-  const configs = distro(count, {}, distroParams);
+  // Create lines using the placer registry
+  const configs = createPlacer(distroName, count, {}, distroParams);
   world.lines = configs.map((cfg, i) => new Line(cfg, i));
 
   // Track what we picked for serialization

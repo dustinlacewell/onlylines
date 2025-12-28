@@ -1,9 +1,9 @@
 import React from 'react';
 import { Section, Checkbox, Tooltip, Subsection, EvolverCard, Hint } from '../../../design';
 import { useEvolverStore, type PositionEvolverState } from '../../../../storeReact';
-import { positionEvolverCatalog, getCatalogNames } from '../../../../catalogs';
+import { getAllMovers, getMover, schemaToParamDefs } from '../../../../core';
 
-const positionEvolverNames = getCatalogNames(positionEvolverCatalog);
+const positionEvolverNames = getAllMovers().map(m => m.name);
 
 const positionTooltips: Record<string, string> = {
   rotate: 'Rotate line endpoints around the perimeter',
@@ -57,10 +57,13 @@ export function MotionTab() {
   const handleToggle = (name: string, checked: boolean) => {
     if (checked) {
       // Add with default params (middle-range values)
-      const entry = positionEvolverCatalog[name];
+      const def = getMover(name);
       const params: Record<string, number> = {};
-      for (const [paramName, paramType] of entry.params) {
-        params[paramName] = paramType.decode(128);
+      if (def) {
+        const paramDefs = schemaToParamDefs(def.params);
+        for (const [paramName, paramType] of paramDefs) {
+          params[paramName] = paramType.decode(128);
+        }
       }
       const newEvolver: PositionEvolverState = { type: name, params };
       setPositionEvolvers([...positionEvolversSelected, newEvolver]);
@@ -104,13 +107,14 @@ export function MotionTab() {
             <div style={styles.empty}>No evolvers selected</div>
           ) : (
             positionEvolversSelected.map((evolver, index) => {
-              const entry = positionEvolverCatalog[evolver.type];
+              const def = getMover(evolver.type);
+              const paramDefs = def ? schemaToParamDefs(def.params) : [];
               return (
                 <EvolverCard
                   key={`${evolver.type}-${index}`}
                   name={evolver.type}
                   tooltip={positionTooltips[evolver.type]}
-                  paramDefs={entry?.params ?? []}
+                  paramDefs={paramDefs}
                   params={evolver.params}
                   onParamsChange={(params) => handleParamsChange(index, params)}
                   onRemove={() => handleRemove(index)}
