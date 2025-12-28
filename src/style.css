@@ -1,0 +1,38 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+canvas {
+  cursor: pointer;
+}
+
+.info {
+  position: fixed;
+  bottom: 40px;
+  right: 20px;
+  color: rgba(255, 255, 255, 0.4);
+  font: 11px/1.5 monospace;
+  text-align: right;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.hint {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #444;
+  font: 12px system-ui;
+}
