@@ -1,5 +1,93 @@
 // Evolver system - composable animation primitives
 
+// === NEW ARCHITECTURE (Motion + Mapper + Output) ===
+// See /llm/evolver-architecture.md for full design
+
+// System types and computeT
+export {
+  type MotionConfig,
+  type MotionMode,
+  type EdgeBehavior as SystemEdgeBehavior,
+  type MapperContext,
+  type Mapper as SystemMapper,
+  type MapperFactory,
+  defaultMotionConfig,
+  computeT,
+  makeMapperContext,
+  applyMotion,
+} from './system';
+
+// Mapper catalog
+export {
+  type MapperMeta,
+  type MapperEntry,
+  type OptionMeta,
+  mapperCatalog,
+  getMapper,
+  getMapperMeta,
+  getMappersByCategory,
+  // Individual mappers
+  identity,
+  sine as sineMapperEntry,
+  cosine as cosineMapperEntry,
+  triangle as triangleMapperEntry,
+  sawtooth as sawtoothMapperEntry,
+  step as stepMapperEntry,
+  pulse as pulseMapperEntry,
+  square as squareMapperEntry,
+  spot as spotMapperEntry,
+  spotLinear as spotLinearMapperEntry,
+  spotBinary as spotBinaryMapperEntry,
+  easeIn,
+  easeOut,
+  easeInOut,
+  noise as noiseMapperEntry,
+  shimmer as shimmerMapperEntry,
+  flicker as flickerMapperEntry,
+  harmonic as harmonicMapperEntry,
+  interference as interferenceMapperEntry,
+  doubleHelix as doubleHelixMapperEntry,
+  pendulum as pendulumMapperEntry,
+  steps as stepsMapperEntry,
+  bands as bandsMapperEntry,
+} from './mapperCatalog';
+
+// Output adapters
+export {
+  type DashOutputConfig,
+  type ColorOutputConfig,
+  type RangeOutputConfig,
+  defaultDashOutput,
+  defaultAlphaOutput,
+  defaultLineWidthOutput,
+  toDash as systemToDash,
+  toBinaryDash as systemToBinaryDash,
+  toVariableDash,
+  toColor as systemToColor,
+  toRange,
+  toLineWidth as systemToLineWidth,
+} from './outputAdapters';
+
+// Evolver factory (main entry point for new system)
+export {
+  type EvolverSlotConfig,
+  type DashSlotConfig,
+  type ColorSlotConfig,
+  type AlphaSlotConfig,
+  type LineWidthSlotConfig,
+  type WorldEvolverConfig,
+  type CreatedEvolvers,
+  type PresetName,
+  createDashEvolverFromConfig,
+  createColorEvolverFromConfig,
+  createAlphaEvolverFromConfig,
+  createLineWidthEvolverFromConfig,
+  createEvolversFromConfig,
+  presets,
+} from './evolverFactory';
+
+// === LEGACY TYPES (still used by World) ===
+
 // Types
 export type {
   EvolverWorld,
@@ -176,9 +264,9 @@ export {
   threshold,
   steps as stepMapper,
   // Composite
-  harmonic,
-  interference,
-  doubleHelix,
+  harmonic as harmonicMapper,
+  interference as interferenceMapper,
+  doubleHelix as doubleHelixMapper,
   // Combinators
   invert as invertMapper,
   remap as remapMapper,
@@ -201,17 +289,37 @@ export {
   // Evolver factories
   createDashEvolver,
   createNumberEvolver,
-  // Pre-built composed evolvers
-  composedCascade,
-  composedCascadeBounce,
-  composedCascadeAbsolute,
-  composedCascadeBounceAbsolute,
-  composedRollingSolid,
-  composedRollingSolidBounce,
-  composedRollingSolidAbsolute,
-  composedRollingSolidBounceAbsolute,
-  composedSineWaveGap,
 } from './compose';
+
+// Composed dash evolvers with options
+export {
+  type EdgeBehavior,
+  type SpeedMode,
+  type CascadeOptions,
+  type RollingSolidOptions,
+  type SineWaveOptions,
+  type RippleOptions,
+  type DoubleHelixOptions,
+  type GradientRollOptions,
+  type HarmonicOptions,
+  type InterferenceOptions,
+  type PendulumOptions,
+  type DissolveOptions,
+  type BreathingWaveOptions,
+  type RollingDashesOptions,
+  cascade,
+  rollingSolid,
+  sineWaveGap,
+  ripple,
+  doubleHelix,
+  gradientRoll,
+  harmonic,
+  interference,
+  pendulum,
+  dissolve,
+  breathingWave,
+  rollingDashes,
+} from './dashComposed';
 
 // Grouped exports for convenience
 import * as position from './position';
@@ -222,6 +330,12 @@ import * as palettes from './palettes';
 import * as motion from './motion';
 import * as mappers from './mappers';
 import * as compose from './compose';
+import * as dashComposed from './dashComposed';
+// New architecture
+import * as system from './system';
+import * as mapperCatalog from './mapperCatalog';
+import * as outputAdapters from './outputAdapters';
+import * as evolverFactory from './evolverFactory';
 
 export const Evolvers = {
   position,
@@ -232,4 +346,10 @@ export const Evolvers = {
   motion,
   mappers,
   compose,
+  dashComposed,
+  // New architecture
+  system,
+  mapperCatalog,
+  outputAdapters,
+  evolverFactory,
 };

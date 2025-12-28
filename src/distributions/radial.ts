@@ -1,10 +1,10 @@
 import { rand, pick } from '../utils';
 import type { LineConfig } from '../types';
-import type { DistributionOptions } from './types';
+import type { DistributionOptions, DistributionParams } from './types';
 import { makeLine } from './utils';
 
 // Perfect star burst from center
-export const star = (count: number, options: DistributionOptions = {}): LineConfig[] => {
+export const star = (count: number, options: DistributionOptions = {}, _params: DistributionParams = {}): LineConfig[] => {
   const speed = options.speed ?? rand(0.08, 0.2);
   const width = options.lineWidth ?? 1;
   const dir = pick([-1, 1]);
@@ -17,7 +17,7 @@ export const star = (count: number, options: DistributionOptions = {}): LineConf
 };
 
 // Star with alternating lengths
-export const starBurst = (count: number, options: DistributionOptions = {}): LineConfig[] => {
+export const starBurst = (count: number, options: DistributionOptions = {}, _params: DistributionParams = {}): LineConfig[] => {
   const speed = options.speed ?? rand(0.08, 0.2);
   const width = options.lineWidth ?? 1;
   const dir = pick([-1, 1]);
@@ -32,10 +32,11 @@ export const starBurst = (count: number, options: DistributionOptions = {}): Lin
 };
 
 // Spokes with n-fold symmetry
-export const symmetricSpokes = (count: number, options: DistributionOptions = {}): LineConfig[] => {
+export const symmetricSpokes = (count: number, options: DistributionOptions = {}, params: DistributionParams = {}): LineConfig[] => {
   const speed = options.speed ?? rand(0.05, 0.15);
   const width = options.lineWidth ?? 1;
-  const symmetry = pick([3, 4, 5, 6, 8]);
+  // Use param if provided, otherwise pick random
+  const symmetry = params.symmetry !== undefined ? Math.round(params.symmetry) : pick([3, 4, 5, 6, 8]);
   const spokesPerSection = Math.max(1, Math.floor(count / symmetry));
   const lines: LineConfig[] = [];
   const dir = pick([-1, 1]);

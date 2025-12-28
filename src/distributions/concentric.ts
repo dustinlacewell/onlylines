@@ -1,13 +1,13 @@
 import { rand, pick } from '../utils';
 import type { LineConfig } from '../types';
-import type { DistributionOptions } from './types';
+import type { DistributionOptions, DistributionParams } from './types';
 import { makeLine } from './utils';
 
 // Concentric rings of short line segments
-export const concentricRings = (count: number, options: DistributionOptions = {}): LineConfig[] => {
+export const concentricRings = (count: number, options: DistributionOptions = {}, params: DistributionParams = {}): LineConfig[] => {
   const speed = options.speed ?? rand(0.05, 0.12);
   const width = options.lineWidth ?? 1;
-  const numRings = pick([3, 4, 5, 6]);
+  const numRings = params.rings !== undefined ? Math.round(params.rings) : pick([3, 4, 5, 6]);
   const linesPerRing = Math.floor(count / numRings);
   const lines: LineConfig[] = [];
 
@@ -25,10 +25,10 @@ export const concentricRings = (count: number, options: DistributionOptions = {}
 };
 
 // Nested squares/diamonds
-export const nestedPolygons = (count: number, options: DistributionOptions = {}): LineConfig[] => {
+export const nestedPolygons = (count: number, options: DistributionOptions = {}, params: DistributionParams = {}): LineConfig[] => {
   const speed = options.speed ?? rand(0.03, 0.1);
   const width = options.lineWidth ?? 1;
-  const layers = pick([3, 4, 5, 6, 8]);
+  const layers = params.layers !== undefined ? Math.round(params.layers) : pick([3, 4, 5, 6, 8]);
   const linesPerLayer = Math.floor(count / layers);
   const lines: LineConfig[] = [];
   const baseDir = pick([-1, 1]);

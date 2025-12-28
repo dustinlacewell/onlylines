@@ -53,3 +53,8 @@ export function pickW<T>(arr: T[], weights: number[]): T {
   }
   return arr[arr.length - 1];
 }
+
+// Coin flip with given probability of true
+export function coinFlip(probability = 0.5): boolean {
+  return mulberry32() < probability;
+}

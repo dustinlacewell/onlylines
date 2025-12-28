@@ -5,4 +5,8 @@ export interface DistributionOptions {
   lineWidth?: number;
 }
 
-export type Distribution = (count: number, options?: DistributionOptions) => LineConfig[];
+export interface DistributionParams {
+  [key: string]: number;
+}
+
+export type Distribution = (count: number, options?: DistributionOptions, params?: DistributionParams) => LineConfig[];

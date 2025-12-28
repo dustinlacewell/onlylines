@@ -1,10 +1,10 @@
 import { rand } from '../utils';
 import type { LineConfig } from '../types';
-import type { DistributionOptions } from './types';
+import type { DistributionOptions, DistributionParams } from './types';
 import { makeLine } from './utils';
 
 // Orthogonal grid
-export const grid = (count: number, options: DistributionOptions = {}): LineConfig[] => {
+export const grid = (count: number, options: DistributionOptions = {}, _params: DistributionParams = {}): LineConfig[] => {
   const speed = options.speed ?? rand(0.02, 0.08);
   const width = options.lineWidth ?? 1;
   const halfCount = Math.floor(count / 2);
@@ -24,7 +24,7 @@ export const grid = (count: number, options: DistributionOptions = {}): LineConf
 };
 
 // Woven/interlaced pattern - alternating directions create weave effect
-export const woven = (count: number, options: DistributionOptions = {}): LineConfig[] => {
+export const woven = (count: number, options: DistributionOptions = {}, _params: DistributionParams = {}): LineConfig[] => {
   const speed = options.speed ?? rand(0.03, 0.08);
   const width = options.lineWidth ?? 1;
   const lines: LineConfig[] = [];

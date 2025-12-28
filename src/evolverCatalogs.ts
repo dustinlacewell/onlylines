@@ -9,6 +9,7 @@ import * as ColorAnim from './evolvers/colorAnimations';
 import { palettes, type Palette, type PaletteName } from './evolvers/palettes';
 import type { PositionEvolver, ColorEvolver, NumberEvolver, DashEvolver } from './evolvers/types';
 import * as Dash from './evolvers/dash';
+import * as DashComposed from './evolvers/dashComposed';
 
 // === EVOLVER CATALOGS ===
 // These are exported so the debug UI and serialization can enumerate them
@@ -32,6 +33,7 @@ export interface ColorAnimationEntry {
 
 // Position evolvers catalog
 export const positionEvolvers: EvolverEntry<PositionEvolver>[] = [
+  // Basic
   { name: 'rotate', create: () => Position.rotate(rand(0.03, 0.15)) },
   { name: 'rotateBreathing', create: () => Position.rotateBreathing(rand(0.05, 0.12), rand(0.03, 0.08), rand(0.15, 0.4)) },
   { name: 'rotateReversing', create: () => Position.rotateReversing(rand(0.08, 0.2), rand(3, 8)) },
@@ -45,6 +47,15 @@ export const positionEvolvers: EvolverEntry<PositionEvolver>[] = [
   { name: 'spiral', create: () => Position.spiral(rand(0.05, 0.15), rand(0.03, 0.1)) },
   { name: 'vortex', create: () => Position.vortex(rand(0.1, 0.25), rand(0.02, 0.08)) },
   { name: 'waveInterference', create: () => Position.waveInterference(rand(0.1, 0.3), rand(0.15, 0.4), rand(0.2, 0.5)) },
+  // Fancy
+  { name: 'lissajous', create: () => Position.lissajous(pick([2, 3, 4, 5]), pick([2, 3, 4, 5]), rand(0.1, 0.25), rand(0.05, 0.2), rand(0, Math.PI)) },
+  { name: 'coupled', create: () => Position.coupled(rand(0.05, 0.2), rand(0.1, 0.3), rand(0.01, 0.05)) },
+  { name: 'elastic', create: () => Position.elastic(rand(0.3, 0.8), rand(0.05, 0.2), pick([2, 3, 4, 5])) },
+  { name: 'rose', create: () => Position.rose(pick([3, 4, 5, 6, 7]), pick([2, 3, 4, 5]), rand(0.1, 0.25), rand(0.05, 0.15)) },
+  { name: 'pendulum', create: () => Position.pendulum(rand(0.3, 0.8), rand(0.2, 0.5), rand(0.01, 0.05)) },
+  { name: 'flocking', create: () => Position.flocking(rand(0.5, 1), rand(0.3, 0.7), rand(0.2, 0.5), rand(0.1, 0.3)) },
+  { name: 'attractor', create: () => Position.attractor(rand(0.3, 0.8), rand(0.2, 0.5), rand(0.05, 0.2)) },
+  { name: 'chaotic', create: () => Position.chaotic(rand(0.2, 0.5), rand(0.3, 0.7), rand(0.05, 0.2), rand(0.1, 0.3)) },
 ];
 
 // Palette catalog - all available color palettes
@@ -139,21 +150,119 @@ export const dashEvolvers: EvolverEntry<DashEvolver>[] = [
   { name: 'pulsingGap', create: () => Dash.pulsingGap(rand(8, 15), rand(2, 5), rand(15, 25), rand(0.3, 0.8)) },
   { name: 'depthDash', create: () => Dash.depthDash(rand(15, 25), rand(3, 8), rand(5, 15)) },
   { name: 'strobeDash', create: () => Dash.strobeDash(rand(8, 15), rand(5, 12), rand(2, 6)) },
-  // Rolling/wave patterns - smooth cyclical variations
-  { name: 'cascade', create: () => Dash.cascade(rand(0.3, 0.5), rand(0.1, 0.2)) },
-  { name: 'cascadeBounce', create: () => Dash.cascadeBounce(rand(0.3, 0.5), rand(0.1, 0.2)) },
-  { name: 'rollingSolid', create: () => Dash.rollingSolid(rand(0.15, 0.4), rand(0.2, 0.4), rand(15, 25)) },
-  { name: 'rollingSolidBounce', create: () => Dash.rollingSolidBounce(rand(0.15, 0.4), rand(0.2, 0.4), rand(15, 25)) },
-  { name: 'rollingDashes', create: () => Dash.rollingDashes(rand(0.1, 0.3), rand(8, 15)) },
-  { name: 'sineWaveGap', create: () => Dash.sineWaveGap(rand(0.1, 0.3), rand(2, 5), rand(20, 30), pick([1, 2, 3])) },
-  { name: 'doubleHelix', create: () => Dash.doubleHelix(rand(0.1, 0.25), rand(15, 25)) },
-  { name: 'gradientRoll', create: () => Dash.gradientRoll(rand(0.1, 0.25), rand(20, 30)) },
-  { name: 'ripple', create: () => Dash.ripple(rand(0.2, 0.4), pick([2, 3, 4]), rand(15, 25)) },
-  { name: 'breathingWave', create: () => Dash.breathingWave(rand(0.1, 0.25), rand(3, 6), rand(12, 18), rand(3, 6), rand(15, 25)) },
-  { name: 'harmonic', create: () => Dash.harmonic(rand(0.1, 0.2), rand(20, 30)) },
-  { name: 'interference', create: () => Dash.interference(rand(0.15, 0.3), rand(18, 26)) },
-  { name: 'pendulum', create: () => Dash.pendulum(rand(0.1, 0.2), rand(20, 28)) },
-  { name: 'dissolve', create: () => Dash.dissolve(rand(0.1, 0.3), rand(0.2, 0.4)) },
+  // Rolling/wave patterns - smooth cyclical variations (with randomized options)
+  { name: 'cascade', create: () => {
+    const speedMode = pick(['relative', 'absolute'] as const);
+    return DashComposed.cascade({
+      edge: pick(['wrap', 'bounce'] as const),
+      speedMode,
+      speed: speedMode === 'absolute' ? rand(30, 70) : rand(0.3, 0.5),
+      width: rand(0.1, 0.2),
+    });
+  } },
+  { name: 'rollingSolid', create: () => {
+    const speedMode = pick(['relative', 'absolute'] as const);
+    return DashComposed.rollingSolid({
+      edge: pick(['wrap', 'bounce'] as const),
+      speedMode,
+      speed: speedMode === 'absolute' ? rand(30, 70) : rand(0.15, 0.4),
+      bandWidth: rand(0.2, 0.4),
+      maxGap: rand(15, 25),
+    });
+  } },
+  { name: 'rollingDashes', create: () => {
+    const speedMode = pick(['relative', 'absolute'] as const);
+    return DashComposed.rollingDashes({
+      edge: pick(['wrap', 'bounce'] as const),
+      speedMode,
+      speed: speedMode === 'absolute' ? rand(30, 70) : rand(0.1, 0.3),
+      dashLen: rand(8, 15),
+    });
+  } },
+  { name: 'sineWaveGap', create: () => {
+    const speedMode = pick(['relative', 'absolute'] as const);
+    return DashComposed.sineWaveGap({
+      edge: pick(['wrap', 'bounce'] as const),
+      speedMode,
+      speed: speedMode === 'absolute' ? rand(30, 70) : rand(0.1, 0.3),
+      waves: pick([1, 2, 3]),
+      maxGap: rand(20, 30),
+    });
+  } },
+  { name: 'doubleHelix', create: () => {
+    const speedMode = pick(['relative', 'absolute'] as const);
+    return DashComposed.doubleHelix({
+      edge: pick(['wrap', 'bounce'] as const),
+      speedMode,
+      speed: speedMode === 'absolute' ? rand(30, 70) : rand(0.1, 0.25),
+      maxGap: rand(15, 25),
+    });
+  } },
+  { name: 'gradientRoll', create: () => {
+    const speedMode = pick(['relative', 'absolute'] as const);
+    return DashComposed.gradientRoll({
+      edge: pick(['wrap', 'bounce'] as const),
+      speedMode,
+      speed: speedMode === 'absolute' ? rand(30, 70) : rand(0.1, 0.25),
+      maxGap: rand(20, 30),
+    });
+  } },
+  { name: 'ripple', create: () => {
+    const speedMode = pick(['relative', 'absolute'] as const);
+    return DashComposed.ripple({
+      speedMode,
+      speed: speedMode === 'absolute' ? rand(30, 70) : rand(0.2, 0.4),
+      rippleCount: pick([2, 3, 4]),
+      maxGap: rand(15, 25),
+    });
+  } },
+  { name: 'breathingWave', create: () => {
+    const speedMode = pick(['relative', 'absolute'] as const);
+    return DashComposed.breathingWave({
+      edge: pick(['wrap', 'bounce'] as const),
+      speedMode,
+      speed: speedMode === 'absolute' ? rand(30, 70) : rand(0.1, 0.25),
+      minDash: rand(3, 6),
+      maxDash: rand(12, 18),
+      minGap: rand(3, 6),
+      maxGap: rand(15, 25),
+    });
+  } },
+  { name: 'harmonic', create: () => {
+    const speedMode = pick(['relative', 'absolute'] as const);
+    return DashComposed.harmonic({
+      edge: pick(['wrap', 'bounce'] as const),
+      speedMode,
+      speed: speedMode === 'absolute' ? rand(30, 70) : rand(0.1, 0.2),
+      maxGap: rand(20, 30),
+    });
+  } },
+  { name: 'interference', create: () => {
+    const speedMode = pick(['relative', 'absolute'] as const);
+    return DashComposed.interference({
+      edge: pick(['wrap', 'bounce'] as const),
+      speedMode,
+      speed: speedMode === 'absolute' ? rand(30, 70) : rand(0.15, 0.3),
+      maxGap: rand(18, 26),
+    });
+  } },
+  { name: 'pendulum', create: () => {
+    const speedMode = pick(['relative', 'absolute'] as const);
+    return DashComposed.pendulum({
+      edge: pick(['wrap', 'bounce'] as const),
+      speedMode,
+      speed: speedMode === 'absolute' ? rand(30, 70) : rand(0.1, 0.2),
+      maxGap: rand(20, 28),
+    });
+  } },
+  { name: 'dissolve', create: () => {
+    const speedMode = pick(['relative', 'absolute'] as const);
+    return DashComposed.dissolve({
+      speedMode,
+      speed: speedMode === 'absolute' ? rand(30, 70) : rand(0.1, 0.3),
+      threshold: rand(0.2, 0.4),
+    });
+  } },
 ];
 
 // Dash evolver names

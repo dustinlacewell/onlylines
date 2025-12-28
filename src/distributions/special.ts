@@ -1,10 +1,10 @@
 import { rand, pick } from '../utils';
 import type { LineConfig } from '../types';
-import type { DistributionOptions } from './types';
+import type { DistributionOptions, DistributionParams } from './types';
 import { makeLine } from './utils';
 
 // Opposing flows
-export const opposing = (count: number, options: DistributionOptions = {}): LineConfig[] => {
+export const opposing = (count: number, options: DistributionOptions = {}, _params: DistributionParams = {}): LineConfig[] => {
   const speed = options.speed ?? rand(0.1, 0.2);
   const width = options.lineWidth ?? 1;
   const halfCount = Math.floor(count / 2);
@@ -22,10 +22,10 @@ export const opposing = (count: number, options: DistributionOptions = {}): Line
 };
 
 // Vortex/whirlpool
-export const vortex = (count: number, options: DistributionOptions = {}): LineConfig[] => {
+export const vortex = (count: number, options: DistributionOptions = {}, params: DistributionParams = {}): LineConfig[] => {
   const speed = options.speed ?? rand(0.15, 0.3);
   const width = options.lineWidth ?? 1;
-  const tightness = rand(1, 3);
+  const tightness = params.tightness !== undefined ? params.tightness : rand(1, 3);
   const dir = pick([-1, 1]);
 
   return Array.from({ length: count }, (_, i) => {
@@ -37,10 +37,10 @@ export const vortex = (count: number, options: DistributionOptions = {}): LineCo
 };
 
 // Web/spider pattern
-export const web = (count: number, options: DistributionOptions = {}): LineConfig[] => {
+export const web = (count: number, options: DistributionOptions = {}, params: DistributionParams = {}): LineConfig[] => {
   const speed = options.speed ?? rand(0.03, 0.08);
   const width = options.lineWidth ?? 1;
-  const spokes = pick([6, 8, 10, 12]);
+  const spokes = params.spokes !== undefined ? Math.round(params.spokes) : pick([6, 8, 10, 12]);
   const lines: LineConfig[] = [];
 
   // Reserve ~30% for spokes, rest for rings

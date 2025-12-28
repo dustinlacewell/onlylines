@@ -1,13 +1,14 @@
 import { rand, pick } from '../utils';
 import type { LineConfig } from '../types';
-import type { DistributionOptions } from './types';
+import type { DistributionOptions, DistributionParams } from './types';
 import { makeLine } from './utils';
 
 // Perfect bilateral symmetry
-export const bilateral = (count: number, options: DistributionOptions = {}): LineConfig[] => {
+export const bilateral = (count: number, options: DistributionOptions = {}, params: DistributionParams = {}): LineConfig[] => {
   const speed = options.speed ?? rand(0.05, 0.15);
   const width = options.lineWidth ?? 1;
-  const axis = rand(0, 2);
+  // axis is 0-1 in catalog (unit type), scale to 0-2 for perimeter position
+  const axis = params.axis !== undefined ? params.axis * 2 : rand(0, 2);
   const halfCount = Math.ceil(count / 2);
   const lines: LineConfig[] = [];
 
@@ -25,10 +26,10 @@ export const bilateral = (count: number, options: DistributionOptions = {}): Lin
 };
 
 // N-fold rotational symmetry
-export const rotationalSymmetry = (count: number, options: DistributionOptions = {}): LineConfig[] => {
+export const rotationalSymmetry = (count: number, options: DistributionOptions = {}, params: DistributionParams = {}): LineConfig[] => {
   const speed = options.speed ?? rand(0.05, 0.15);
   const width = options.lineWidth ?? 1;
-  const folds = pick([2, 3, 4, 5, 6, 8]);
+  const folds = params.folds !== undefined ? Math.round(params.folds) : pick([2, 3, 4, 5, 6, 8]);
   const linesPerFold = Math.floor(count / folds);
   const lines: LineConfig[] = [];
   const dir = pick([-1, 1]);
@@ -53,10 +54,10 @@ export const rotationalSymmetry = (count: number, options: DistributionOptions =
 };
 
 // Kaleidoscope effect (bilateral + rotational)
-export const kaleidoscope = (count: number, options: DistributionOptions = {}): LineConfig[] => {
+export const kaleidoscope = (count: number, options: DistributionOptions = {}, params: DistributionParams = {}): LineConfig[] => {
   const speed = options.speed ?? rand(0.05, 0.12);
   const width = options.lineWidth ?? 1;
-  const segments = pick([4, 6, 8]);
+  const segments = params.segments !== undefined ? Math.round(params.segments) : pick([4, 6, 8]);
   const linesPerSegment = Math.floor(count / segments);
   const lines: LineConfig[] = [];
 

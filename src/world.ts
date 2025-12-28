@@ -2,11 +2,17 @@ import type { WorldConfig, World as IWorld, EvolverSet } from './types';
 import type { Line } from './line';
 import { makeLineContext, type DashValue } from './evolvers/types';
 import { mod } from './utils';
+import {
+  type WorldEvolverConfig,
+  createEvolversFromConfig,
+} from './evolvers/evolverFactory';
+import { evolverStoreApi } from './storeReact';
 
 export class World implements IWorld {
   time = 0;
   lines: Line[] = [];
   config: Partial<WorldConfig> = {};
+  private storeUnsubscribe: (() => void) | null = null;
 
   evolvers: EvolverSet = {
     position: [],
@@ -15,6 +21,54 @@ export class World implements IWorld {
     lineWidth: null,
     dash: null,
   };
+
+  /** Subscribe to store for live evolver updates */
+  subscribeToStore(): void {
+    // Apply initial config (replaceAll=true to override any legacy evolvers)
+    this.applyEvolverConfig(evolverStoreApi.buildConfig(), true);
+
+    // Subscribe to future changes
+    this.storeUnsubscribe = evolverStoreApi.subscribe(() => {
+      this.applyEvolverConfig(evolverStoreApi.buildConfig(), true);
+    });
+  }
+
+  /** Unsubscribe from store */
+  unsubscribeFromStore(): void {
+    if (this.storeUnsubscribe) {
+      this.storeUnsubscribe();
+      this.storeUnsubscribe = null;
+    }
+  }
+
+  /** Apply evolvers from a config object (new architecture) */
+  applyEvolverConfig(config: WorldEvolverConfig, replaceAll = false): void {
+    const created = createEvolversFromConfig(config);
+
+    if (replaceAll) {
+      // When subscribed to store, replace all slots based on config
+      // If slot is in config, use it; otherwise clear it
+      this.evolvers.dash = created.dash ?? null;
+      this.evolvers.color = created.color ?? null;
+      this.evolvers.alpha = created.alpha ?? null;
+      this.evolvers.lineWidth = created.lineWidth ?? null;
+    } else {
+      // When called manually, only update slots that are defined in config
+      // This allows legacy evolvers to coexist
+      if (config.dash !== undefined) {
+        this.evolvers.dash = created.dash ?? null;
+      }
+      if (config.color !== undefined) {
+        this.evolvers.color = created.color ?? null;
+      }
+      if (config.alpha !== undefined) {
+        this.evolvers.alpha = created.alpha ?? null;
+      }
+      if (config.lineWidth !== undefined) {
+        this.evolvers.lineWidth = created.lineWidth ?? null;
+      }
+    }
+  }
 
   update(dt: number): void {
     this.time += dt;

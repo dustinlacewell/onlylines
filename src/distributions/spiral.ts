@@ -1,13 +1,13 @@
 import { rand, pick, TAU } from '../utils';
 import type { LineConfig } from '../types';
-import type { DistributionOptions } from './types';
+import type { DistributionOptions, DistributionParams } from './types';
 import { makeLine } from './utils';
 
 // Classic spiral
-export const spiral = (count: number, options: DistributionOptions = {}): LineConfig[] => {
+export const spiral = (count: number, options: DistributionOptions = {}, params: DistributionParams = {}): LineConfig[] => {
   const speed = options.speed ?? rand(0.1, 0.2);
   const width = options.lineWidth ?? 1;
-  const turns = rand(2, 5);
+  const turns = params.turns !== undefined ? params.turns : rand(2, 5);
   const dir = pick([-1, 1]);
 
   return Array.from({ length: count }, (_, i) => {
@@ -19,10 +19,10 @@ export const spiral = (count: number, options: DistributionOptions = {}): LineCo
 };
 
 // Double spiral (two interleaved)
-export const doubleSpiral = (count: number, options: DistributionOptions = {}): LineConfig[] => {
+export const doubleSpiral = (count: number, options: DistributionOptions = {}, params: DistributionParams = {}): LineConfig[] => {
   const speed = options.speed ?? rand(0.1, 0.2);
   const width = options.lineWidth ?? 1;
-  const turns = rand(1.5, 3);
+  const turns = params.turns !== undefined ? params.turns : rand(1.5, 3);
 
   return Array.from({ length: count }, (_, i) => {
     const arm = i % 2;
@@ -36,7 +36,7 @@ export const doubleSpiral = (count: number, options: DistributionOptions = {}): 
 };
 
 // Golden spiral using fibonacci angle
-export const goldenSpiral = (count: number, options: DistributionOptions = {}): LineConfig[] => {
+export const goldenSpiral = (count: number, options: DistributionOptions = {}, _params: DistributionParams = {}): LineConfig[] => {
   const speed = options.speed ?? rand(0.08, 0.15);
   const width = options.lineWidth ?? 1;
   const phi = (1 + Math.sqrt(5)) / 2;
@@ -52,7 +52,7 @@ export const goldenSpiral = (count: number, options: DistributionOptions = {}): 
 };
 
 // Sunflower/phyllotaxis
-export const sunflower = (count: number, options: DistributionOptions = {}): LineConfig[] => {
+export const sunflower = (count: number, options: DistributionOptions = {}, _params: DistributionParams = {}): LineConfig[] => {
   const speed = options.speed ?? rand(0.08, 0.15);
   const width = options.lineWidth ?? 1;
   const phi = (1 + Math.sqrt(5)) / 2;

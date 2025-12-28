@@ -1,15 +1,17 @@
 import { rand, pick, mod, TAU } from '../utils';
 import type { LineConfig } from '../types';
-import type { DistributionOptions } from './types';
+import type { DistributionOptions, DistributionParams } from './types';
 import { makeLine } from './utils';
 
 // Lissajous curve
-export const lissajous = (count: number, options: DistributionOptions = {}): LineConfig[] => {
+export const lissajous = (count: number, options: DistributionOptions = {}, params: DistributionParams = {}): LineConfig[] => {
   const speed = options.speed ?? rand(0.08, 0.15);
   const width = options.lineWidth ?? 1;
-  const a = pick([1, 2, 3, 4, 5]);
-  const b = pick([1, 2, 3, 4, 5].filter(x => x !== a));
-  const delta = rand(0, Math.PI);
+  const a = params.a !== undefined ? Math.round(params.a) : pick([1, 2, 3, 4, 5]);
+  let b = params.b !== undefined ? Math.round(params.b) : pick([1, 2, 3, 4, 5].filter(x => x !== a));
+  // Ensure b is different from a if randomly picked
+  if (b === a) b = a === 5 ? 1 : a + 1;
+  const delta = params.delta !== undefined ? params.delta : rand(0, Math.PI);
   const dir = pick([-1, 1]);
 
   return Array.from({ length: count }, (_, i) => {
@@ -24,10 +26,10 @@ export const lissajous = (count: number, options: DistributionOptions = {}): Lin
 };
 
 // Rose curve (rhodonea)
-export const roseCurve = (count: number, options: DistributionOptions = {}): LineConfig[] => {
+export const roseCurve = (count: number, options: DistributionOptions = {}, params: DistributionParams = {}): LineConfig[] => {
   const speed = options.speed ?? rand(0.08, 0.15);
   const width = options.lineWidth ?? 1;
-  const k = pick([2, 3, 4, 5, 6, 7]);
+  const k = params.k !== undefined ? Math.round(params.k) : pick([2, 3, 4, 5, 6, 7]);
   const dir = pick([-1, 1]);
 
   return Array.from({ length: count }, (_, i) => {
@@ -42,11 +44,14 @@ export const roseCurve = (count: number, options: DistributionOptions = {}): Lin
 };
 
 // Modular arithmetic pattern
-export const modularPattern = (count: number, options: DistributionOptions = {}): LineConfig[] => {
+export const modularPattern = (count: number, options: DistributionOptions = {}, params: DistributionParams = {}): LineConfig[] => {
   const speed = options.speed ?? rand(0.05, 0.12);
   const width = options.lineWidth ?? 1;
   const modulus = count;
-  const multiplier = pick([2, 3, 5, 7, 11, 13].filter(m => m < count));
+  const validMultipliers = [2, 3, 5, 7, 11, 13].filter(m => m < count);
+  const multiplier = params.multiplier !== undefined
+    ? Math.round(params.multiplier)
+    : pick(validMultipliers.length > 0 ? validMultipliers : [2]);
   const dir = pick([-1, 1]);
 
   return Array.from({ length: count }, (_, i) => {

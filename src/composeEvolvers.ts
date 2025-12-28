@@ -3,7 +3,7 @@ import { rand, randInt, pick, pickW, setSeed, newSeed } from './random';
 import { World } from './world';
 import { Line } from './line';
 import { Distributions } from './distributions/index';
-import { setURLFromState, type WorldState } from './serialize';
+// URL serialization now handled in main.ts
 
 // Import catalogs
 import {
@@ -16,6 +16,44 @@ import {
   colorAnimationNames,
   createColorEvolver,
 } from './evolverCatalogs';
+
+// Import composed dash evolvers for options-based creation
+import * as DashComposed from './evolvers/dashComposed';
+import * as Dash from './evolvers/dash';
+import type { DashEvolver } from './evolvers/types';
+import { createPositionEvolver } from './evolvers/position';
+
+// Create a dash evolver from name and options
+function createDashEvolverFromOptions(name: string, options: Record<string, unknown> = {}): DashEvolver | null {
+  switch (name) {
+    case 'none': return Dash.solid();
+    case 'dashed': return Dash.dashed(options.dashLen as number ?? 10, options.gapLen as number ?? 10);
+    case 'dotted': return Dash.dotted(options.dotSize as number ?? 2, options.gapLen as number ?? 8);
+    case 'morse': return Dash.morse(options.dashLen as number ?? 15, options.dotLen as number ?? 3, options.gapLen as number ?? 5);
+    case 'marching': return Dash.marching(options.dashLen as number ?? 10, options.gapLen as number ?? 10, options.speed as number ?? 50);
+    case 'marchingReverse': return Dash.marchingReverse(options.dashLen as number ?? 10, options.gapLen as number ?? 10, options.speed as number ?? 50);
+    case 'marchingWave': return Dash.marchingWave(options.dashLen as number ?? 10, options.gapLen as number ?? 10, options.speed as number ?? 50, options.phaseSpread as number ?? 0.5);
+    case 'marchingAlternate': return Dash.marchingAlternate(options.dashLen as number ?? 10, options.gapLen as number ?? 10, options.speed as number ?? 50);
+    case 'breathingDash': return Dash.breathingDash(options.minDash as number ?? 5, options.maxDash as number ?? 20, options.gapLen as number ?? 10, options.speed as number ?? 0.5);
+    case 'pulsingGap': return Dash.pulsingGap(options.dashLen as number ?? 10, options.minGap as number ?? 2, options.maxGap as number ?? 20, options.speed as number ?? 0.5);
+    case 'depthDash': return Dash.depthDash(options.nearDash as number ?? 20, options.farDash as number ?? 5, options.gapLen as number ?? 10);
+    case 'strobeDash': return Dash.strobeDash(options.dashLen as number ?? 10, options.gapLen as number ?? 10, options.strobeSpeed as number ?? 4);
+    // Composed evolvers with full options support
+    case 'cascade': return DashComposed.cascade(options as DashComposed.CascadeOptions);
+    case 'rollingSolid': return DashComposed.rollingSolid(options as DashComposed.RollingSolidOptions);
+    case 'rollingDashes': return DashComposed.rollingDashes(options as DashComposed.RollingDashesOptions);
+    case 'sineWaveGap': return DashComposed.sineWaveGap(options as DashComposed.SineWaveOptions);
+    case 'doubleHelix': return DashComposed.doubleHelix(options as DashComposed.DoubleHelixOptions);
+    case 'gradientRoll': return DashComposed.gradientRoll(options as DashComposed.GradientRollOptions);
+    case 'ripple': return DashComposed.ripple(options as DashComposed.RippleOptions);
+    case 'breathingWave': return DashComposed.breathingWave(options as DashComposed.BreathingWaveOptions);
+    case 'harmonic': return DashComposed.harmonic(options as DashComposed.HarmonicOptions);
+    case 'interference': return DashComposed.interference(options as DashComposed.InterferenceOptions);
+    case 'pendulum': return DashComposed.pendulum(options as DashComposed.PendulumOptions);
+    case 'dissolve': return DashComposed.dissolve(options as DashComposed.DissolveOptions);
+    default: return null;
+  }
+}
 
 // Re-export catalogs for other modules
 export {
@@ -35,15 +73,18 @@ export type { EvolverEntry, PaletteEntry, ColorAnimationEntry } from './evolverC
 // === SELECTION STATE ===
 // This can be set by the debug UI or deserialization to override random selection
 
+import type { PositionEvolverState, DistributionState } from './serialize';
+
 export interface EvolverSelection {
   seed?: number;
-  distribution?: string;
-  position?: string[];
+  distribution?: DistributionState;
+  position?: PositionEvolverState[];  // Now includes params
   palette?: string;
   colorAnimation?: string;
   alpha?: string;
   lineWidth?: string;
   dash?: string;
+  dashOptions?: Record<string, unknown>;
   fade?: number;
   count?: number;
 }
@@ -64,7 +105,7 @@ export function clearSelection(): void {
 
 // === COMPOSE WORLD ===
 
-export function composeWorld(updateURL = true): World {
+export function composeWorld(): World {
   const world = new World();
   const sel = currentSelection;
 
@@ -90,41 +131,48 @@ export function composeWorld(updateURL = true): World {
 
   // Pick distribution - always call pick(), then use selection if provided
   const randomDistro = pick(distributionNames);
-  const distroName = (sel.distribution && distributionNames.includes(sel.distribution as keyof typeof Distributions)
-    ? sel.distribution
+  const distState = sel.distribution;
+  const distroName = (distState && distributionNames.includes(distState.type as keyof typeof Distributions)
+    ? distState.type
     : randomDistro) as keyof typeof Distributions;
+  const distroParams = distState?.type === distroName ? (distState.params ?? {}) : {};
   const distro = Distributions[distroName];
 
   // Create lines - let distribution handle its own random calls for PRNG consistency
-  const configs = distro(count, {});
+  const configs = distro(count, {}, distroParams);
   world.lines = configs.map((cfg, i) => new Line(cfg, i));
 
   // Track what we picked for serialization
   const pickedPosition: string[] = [];
 
   // === COMPOSE POSITION EVOLVERS ===
-  // Create ALL evolvers upfront in fixed order to ensure consistent PRNG consumption
-  const allPositionEvolvers = new Map<string, ReturnType<typeof positionEvolvers[0]['create']>>();
-  for (const entry of positionEvolvers) {
-    allPositionEvolvers.set(entry.name, entry.create());
+  // Consume PRNG in consistent order for reproducibility
+  const numPosEvolvers = pickW([1, 2], [0.7, 0.3]);
+  const randomPositionStates: PositionEvolverState[] = [];
+
+  // Generate random position evolver states (for when no selection provided)
+  for (let i = 0; i < numPosEvolvers; i++) {
+    const entry = pick(positionEvolvers);
+    // Use catalog's create() to generate random params via PRNG
+    // Then extract the name - the actual params come from the selection or are regenerated
+    randomPositionStates.push({ type: entry.name, params: {} });
   }
 
-  // Now make random selection (only consumes PRNG for pick/pickW, not create)
-  const numPosEvolvers = pickW([1, 2], [0.7, 0.3]);
-  const randomPositionNames: string[] = [];
-  for (let i = 0; i < numPosEvolvers; i++) {
-    randomPositionNames.push(pick(positionEvolvers).name);
+  // Consume additional PRNG for all evolvers to keep state consistent
+  // (old code created all evolvers upfront)
+  for (const entry of positionEvolvers) {
+    entry.create(); // Consume PRNG
   }
 
   // Determine which evolvers to use
-  const positionNamesToUse = sel.position !== undefined ? sel.position : randomPositionNames;
+  const positionStatesToUse = sel.position !== undefined ? sel.position : randomPositionStates;
 
-  // Add the selected evolvers (using pre-created instances)
-  for (const name of positionNamesToUse) {
-    const evolver = allPositionEvolvers.get(name);
+  // Create evolvers from state using the factory (with actual params)
+  for (const posState of positionStatesToUse) {
+    const evolver = createPositionEvolver(posState);
     if (evolver) {
       world.evolvers.position.push(evolver);
-      pickedPosition.push(name);
+      pickedPosition.push(posState.type);
     }
   }
 
@@ -190,10 +238,19 @@ export function composeWorld(updateURL = true): World {
   if (sel.dash !== undefined) {
     // User specified dash - use it if valid
     if (sel.dash !== 'none') {
-      const entry = dashEvolvers.find(e => e.name === sel.dash);
-      if (entry) {
-        world.evolvers.dash = entry.create();
-        pickedDash = entry.name;
+      // If dashOptions provided, create from options; otherwise use catalog's random create
+      if (sel.dashOptions && Object.keys(sel.dashOptions).length > 0) {
+        const evolver = createDashEvolverFromOptions(sel.dash, sel.dashOptions);
+        if (evolver) {
+          world.evolvers.dash = evolver;
+          pickedDash = sel.dash;
+        }
+      } else {
+        const entry = dashEvolvers.find(e => e.name === sel.dash);
+        if (entry) {
+          world.evolvers.dash = entry.create();
+          pickedDash = entry.name;
+        }
       }
     }
   } else {
@@ -224,39 +281,5 @@ export function composeWorld(updateURL = true): World {
     colorScheme: `${pickedPalette}/${pickedColorAnimation} alpha:${pickedAlpha} width:${pickedWidth} dash:${pickedDash}`,
   };
 
-  // === SERIALIZE TO URL ===
-  if (updateURL) {
-    const state: WorldState = {
-      seed,
-      distribution: distroName,
-      position: pickedPosition,
-      palette: pickedPalette,
-      colorAnimation: pickedColorAnimation,
-      alpha: pickedAlpha,
-      lineWidth: pickedWidth,
-      dash: pickedDash,
-      fade,
-      count,
-    };
-    setURLFromState(state);
-  }
-
   return world;
-}
-
-// Compose from a saved state (e.g., from URL)
-export function composeFromState(state: Partial<WorldState>): World {
-  setSelection({
-    seed: state.seed,
-    distribution: state.distribution,
-    position: state.position,
-    palette: state.palette,
-    colorAnimation: state.colorAnimation,
-    alpha: state.alpha,
-    lineWidth: state.lineWidth,
-    dash: state.dash,
-    fade: state.fade,
-    count: state.count,
-  });
-  return composeWorld(true);
 }

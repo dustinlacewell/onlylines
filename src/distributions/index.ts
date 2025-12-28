@@ -1,4 +1,4 @@
-export type { DistributionOptions, Distribution } from './types';
+export type { DistributionOptions, Distribution, DistributionParams } from './types';
 export { makeLine } from './utils';
 
 // Radial distributions

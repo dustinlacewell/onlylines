@@ -1,18 +1,26 @@
 import './style.css';
-import { composeWorld, getSelection, setSelection } from './composeEvolvers';
-import { getStateFromURL } from './serialize';
+import { composeWorld, setSelection } from './composeEvolvers';
 import type { World } from './world';
-import { initDebugUI, updateActiveConfig, setRegenerateCallback } from './debugUI';
+import { mountDebugPanel } from './ui/mountDebugPanel';
+import { evolverStoreApi } from './storeReact';
+import { getStateFromURL, setURLFromState, pushURLFromState } from './serialize';
 
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 const ctx = canvas.getContext('2d')!;
-const infoEl = document.querySelector('.info') as HTMLElement;
 
 let W: number;
 let H: number;
 let world: World;
 let lastTime = 0;
 let animId: number;
+
+// Track previous values to detect changes that require world regeneration
+let prevDistributionJson: string;
+let prevPositionEvolversJson: string;
+let prevLineCount: number;
+
+// Flag to prevent URL updates during popstate restoration
+let isRestoringFromHistory = false;
 
 function resize(): void {
   W = window.innerWidth;
@@ -21,26 +29,31 @@ function resize(): void {
   canvas.height = H;
 }
 
-function updateInfo(): void {
-  const info = world.config.info!;
-  infoEl.innerHTML = [
-    `${info.count} lines`,
-    info.distro,
-    info.behavior,
-    info.colorScheme,
-  ].join('<br>');
-  updateActiveConfig(info);
-}
 
 function newWorld(): void {
-  // Keep debug UI selections but clear seed for fresh randomness
-  const sel = getSelection();
-  setSelection({ ...sel, seed: undefined });
+  // Unsubscribe old world from store
+  if (world) {
+    world.unsubscribeFromStore();
+  }
+
+  // Use store values for distribution/position/seed/count/fade
+  const storeState = evolverStoreApi.getState();
+  setSelection({
+    seed: storeState.seed,
+    distribution: storeState.distribution,
+    position: storeState.positionEvolvers,
+    count: storeState.lineCount,
+    fade: storeState.fade,
+  });
+
   world = composeWorld();
   console.log('Config:', world.config.info);
+
+  // Subscribe world to store for live updates
+  world.subscribeToStore();
+
   ctx.fillStyle = world.config.bg!;
   ctx.fillRect(0, 0, W, H);
-  updateInfo();
 }
 
 function frame(timestamp: number): void {
@@ -53,7 +66,9 @@ function frame(timestamp: number): void {
   ctx.fillRect(0, 0, W, H);
   ctx.globalAlpha = 1;
 
-  world.update(dt);
+  // Apply speed multiplier
+  const speed = evolverStoreApi.getState().speed;
+  world.update(dt * speed);
 
   for (const line of world.lines) {
     line.draw(ctx, W, H, world);
@@ -65,40 +80,69 @@ function frame(timestamp: number): void {
 function init(): void {
   resize();
 
-  // Check for saved state in URL hash BEFORE initializing debug UI
-  // This way the debug UI will show the correct state from the URL
-  const savedState = getStateFromURL();
-  if (savedState && savedState.seed !== undefined) {
-    // Apply URL state to selection so debug UI shows correct values
-    setSelection({
-      seed: savedState.seed,
-      distribution: savedState.distribution,
-      position: savedState.position,
-      palette: savedState.palette,
-      colorAnimation: savedState.colorAnimation,
-      alpha: savedState.alpha,
-      lineWidth: savedState.lineWidth,
-      fade: savedState.fade,
-      count: savedState.count,
-    });
-  }
-
-  // Initialize debug UI AFTER selection is set from URL (or left as default)
-  initDebugUI();
-  setRegenerateCallback(() => newWorld());
-
-  // Now compose the world
-  if (savedState && savedState.seed !== undefined) {
-    world = composeWorld(true);
-    console.log('Loaded from URL:', world.config.info);
+  // Check for state in URL first
+  const urlState = getStateFromURL();
+  if (urlState) {
+    // Apply URL state to store
+    evolverStoreApi.applyState(urlState);
   } else {
-    world = composeWorld();
-    console.log('Config:', world.config.info);
+    // No URL state, randomize
+    evolverStoreApi.randomize();
   }
+
+  // Compose world from store state
+  const storeState = evolverStoreApi.getState();
+  prevDistributionJson = JSON.stringify(storeState.distribution);
+  prevPositionEvolversJson = JSON.stringify(storeState.positionEvolvers);
+  prevLineCount = storeState.lineCount;
+
+  setSelection({
+    seed: storeState.seed,
+    distribution: storeState.distribution,
+    position: storeState.positionEvolvers,
+    count: storeState.lineCount,
+    fade: storeState.fade,
+  });
+
+  world = composeWorld();
+  console.log('Config:', world.config.info);
+
+  // Subscribe world to store for live updates (evolvers only)
+  world.subscribeToStore();
+
+  // Subscribe to ALL store changes for URL sync and world regeneration
+  evolverStoreApi.subscribe((state) => {
+    // Update URL on any state change (unless restoring from history)
+    if (!isRestoringFromHistory) {
+      setURLFromState(state);
+    }
+
+    // Check if distribution/position/lineCount changed (requires world regeneration)
+    const distJson = JSON.stringify(state.distribution);
+    const distChanged = distJson !== prevDistributionJson;
+    const posJson = JSON.stringify(state.positionEvolvers);
+    const posChanged = posJson !== prevPositionEvolversJson;
+    const lineCountChanged = state.lineCount !== prevLineCount;
+
+    if (distChanged || posChanged || lineCountChanged) {
+      prevDistributionJson = distJson;
+      prevPositionEvolversJson = posJson;
+      prevLineCount = state.lineCount;
+      newWorld();
+    }
+
+    // Fade updates live without world regeneration
+    world.config.fade = state.fade;
+  });
+
+  // Set initial URL
+  setURLFromState(storeState);
+
+  // Show UI panel
+  mountDebugPanel();
 
   ctx.fillStyle = world.config.bg!;
   ctx.fillRect(0, 0, W, H);
-  updateInfo();
 
   lastTime = performance.now();
   if (animId) cancelAnimationFrame(animId);
@@ -107,9 +151,30 @@ function init(): void {
 
 window.addEventListener('resize', resize);
 canvas.addEventListener('click', () => {
+  // Push current state to history before randomizing (so back button returns here)
+  pushURLFromState(evolverStoreApi.getState());
+
+  // Randomize the store, then create new world
+  evolverStoreApi.randomize();
+
   ctx.fillStyle = world.config.bg!;
   ctx.fillRect(0, 0, W, H);
   newWorld();
+});
+
+// Handle browser back/forward navigation
+window.addEventListener('popstate', () => {
+  const urlState = getStateFromURL();
+  if (urlState) {
+    // Prevent the store subscription from updating URL during restoration
+    isRestoringFromHistory = true;
+    evolverStoreApi.applyState(urlState);
+    isRestoringFromHistory = false;
+
+    ctx.fillStyle = world.config.bg!;
+    ctx.fillRect(0, 0, W, H);
+    newWorld();
+  }
 });
 
 init();
