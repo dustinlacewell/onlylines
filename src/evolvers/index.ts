@@ -29,15 +29,12 @@ export {
   // Individual mappers
   identity,
   sine as sineMapperEntry,
-  cosine as cosineMapperEntry,
   triangle as triangleMapperEntry,
-  sawtooth as sawtoothMapperEntry,
-  step as stepMapperEntry,
+  threshold as thresholdMapperEntry,
+  step as stepMapperEntry, // alias for threshold
   pulse as pulseMapperEntry,
-  square as squareMapperEntry,
   spot as spotMapperEntry,
   spotLinear as spotLinearMapperEntry,
-  spotBinary as spotBinaryMapperEntry,
   easeIn,
   easeOut,
   easeInOut,
@@ -46,10 +43,14 @@ export {
   flicker as flickerMapperEntry,
   harmonic as harmonicMapperEntry,
   interference as interferenceMapperEntry,
-  doubleHelix as doubleHelixMapperEntry,
   pendulum as pendulumMapperEntry,
+  wavePacket as wavePacketMapperEntry,
+  counterFlow as counterFlowMapperEntry,
+  collision as collisionMapperEntry,
   steps as stepsMapperEntry,
   bands as bandsMapperEntry,
+  softBands as softBandsMapperEntry,
+  flowingBands as flowingBandsMapperEntry,
 } from './mapperCatalog';
 
 // Output adapters
@@ -106,9 +107,7 @@ export {
   type WaveContext,
   // Basic waves
   sine,
-  cosine,
   triangle,
-  sawtooth,
   sineNorm,
   // Pulse/beat
   pulse,
@@ -249,13 +248,11 @@ export {
   // Continuous
   gradient,
   sine as sineMapper,
-  cosine as cosineMapper,
   power as powerMapper,
   powerInverse,
   // Spot/focused
   spotGaussian,
   spotLinear,
-  spotBinary,
   spot,
   // Noise
   noise,
@@ -266,7 +263,6 @@ export {
   // Composite
   harmonic as harmonicMapper,
   interference as interferenceMapper,
-  doubleHelix as doubleHelixMapper,
   // Combinators
   invert as invertMapper,
   remap as remapMapper,

@@ -261,38 +261,39 @@ export const positionEvolverCatalog: Record<string, CatalogEntry> = {
 export const mapperCatalog: Record<string, CatalogEntry> = {
   // Wave
   identity: { params: [] },
-  sine: { params: [['frequency', P.speed]] },
-  cosine: { params: [['frequency', P.speed]] },
+  sine: { params: [['frequency', P.speed], ['phase', P.unit]] },
   triangle: { params: [] },
-  sawtooth: { params: [] },
 
   // Pulse
-  step: { params: [['frequency', P.unit]] },
-  pulse: { params: [['frequency', P.smallUnit]] },
-  square: { params: [['frequency', P.unit]] },
-  spot: { params: [['frequency', P.smallUnit]] },
-  spotLinear: { params: [['frequency', P.smallUnit]] },
-  spotBinary: { params: [['frequency', P.smallUnit]] },
+  threshold: { params: [['cutoff', P.unit]] },
+  step: { params: [['cutoff', P.unit]] }, // alias for threshold
+  pulse: { params: [['center', P.unit], ['width', P.smallUnit]] },
+  spot: { params: [['width', P.smallUnit]] },
+  spotLinear: { params: [['width', P.smallUnit]] },
 
   // Easing
-  easeIn: { params: [['frequency', P.smallInt]] },
-  easeOut: { params: [['frequency', P.smallInt]] },
-  easeInOut: { params: [['frequency', P.smallInt]] },
+  easeIn: { params: [['power', P.smallInt]] },
+  easeOut: { params: [['power', P.smallInt]] },
+  easeInOut: { params: [['power', P.smallInt]] },
 
   // Noise
-  noise: { params: [['frequency', P.unit]] },
-  shimmer: { params: [['frequency', P.smallInt]] },
-  flicker: { params: [['frequency', P.smallInt]] },
+  noise: { params: [['scale', P.unit]] },
+  shimmer: { params: [['frequency', P.smallInt], ['intensity', P.smallUnit]] },
+  flicker: { params: [['speed', P.smallInt], ['intensity', P.smallUnit]] },
 
   // Harmonic
-  harmonic: { params: [['frequency', P.smallInt]] },
-  interference: { params: [['frequency', P.unit]] },
-  doubleHelix: { params: [['frequency', P.unit]] },
+  harmonic: { params: [['harmonics', P.smallInt]] },
+  interference: { params: [['ratio', P.unit], ['phase', P.unit]] },
   pendulum: { params: [] },
+  wavePacket: { params: [['frequency', P.smallInt], ['width', P.unit], ['center', P.unit]] },
+  counterFlow: { params: [['speed', P.smallUnit], ['frequency', P.smallInt]] },
+  collision: { params: [['speed', P.smallUnit], ['sharpness', P.smallInt]] },
 
-  // Step
-  steps: { params: [['frequency', P.smallInt]] },
-  bands: { params: [['frequency', P.smallInt]] },
+  // Step/Bands
+  steps: { params: [['numSteps', P.smallInt]] },
+  bands: { params: [['numBands', P.smallInt]] },
+  softBands: { params: [['numBands', P.smallInt], ['softness', P.unit]] },
+  flowingBands: { params: [['numBands', P.smallInt], ['speed', P.smallUnit], ['waveAmount', P.smallUnit]] },
 };
 
 // === PALETTES ===

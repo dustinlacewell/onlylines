@@ -154,8 +154,8 @@ export function createEvolversFromConfig(config: WorldEvolverConfig): CreatedEvo
 export const presets = {
   cascade: {
     dash: {
-      mapper: 'spotBinary',
-      mapperOptions: { width: 0.15 },
+      mapper: 'threshold',
+      mapperOptions: { cutoff: 0.15, invert: true },
       motion: { mode: 'focal', speed: 0.4, edge: 'wrap' },
       output: { dashLen: 5, maxGap: 15 },
     },

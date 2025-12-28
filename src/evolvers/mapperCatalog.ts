@@ -47,28 +47,16 @@ export const sine: MapperEntry = {
     category: 'wave',
     options: [
       { name: 'frequency', type: 'number', default: 1, min: 0.1, max: 10, step: 0.1, description: 'Number of cycles' },
+      { name: 'phase', type: 'number', default: 0, min: 0, max: 1, step: 0.05, description: 'Phase offset (0.25 = cosine)' },
     ],
   },
-  factory: (opts?: { frequency?: number }) => {
+  factory: (opts?: { frequency?: number; phase?: number }) => {
     const frequency = opts?.frequency ?? 1;
-    return (ctx) => (Math.sin(ctx.t * Math.PI * 2 * frequency) + 1) / 2;
+    const phase = opts?.phase ?? 0;
+    return (ctx) => (Math.sin((ctx.t + phase) * Math.PI * 2 * frequency) + 1) / 2;
   },
 };
 
-export const cosine: MapperEntry = {
-  meta: {
-    name: 'cosine',
-    description: 'Cosine wave (sine offset by quarter phase)',
-    category: 'wave',
-    options: [
-      { name: 'frequency', type: 'number', default: 1, min: 0.1, max: 10, step: 0.1, description: 'Number of cycles' },
-    ],
-  },
-  factory: (opts?: { frequency?: number }) => {
-    const frequency = opts?.frequency ?? 1;
-    return (ctx) => (Math.cos(ctx.t * Math.PI * 2 * frequency) + 1) / 2;
-  },
-};
 
 export const triangle: MapperEntry = {
   meta: {
@@ -80,64 +68,51 @@ export const triangle: MapperEntry = {
   factory: () => (ctx) => ctx.t < 0.5 ? ctx.t * 2 : 2 - ctx.t * 2,
 };
 
-export const sawtooth: MapperEntry = {
-  meta: {
-    name: 'sawtooth',
-    description: 'Linear ramp then drop',
-    category: 'wave',
-    options: [],
-  },
-  factory: () => (ctx) => ctx.t,
-};
 
 // === PULSE MAPPERS (sharp transitions) ===
 
-export const step: MapperEntry = {
+export const threshold: MapperEntry = {
   meta: {
-    name: 'step',
-    description: 'Binary on/off at threshold',
+    name: 'threshold',
+    description: 'Binary on/off at cutoff point',
     category: 'pulse',
     options: [
-      { name: 'threshold', type: 'number', default: 0.5, min: 0, max: 1, step: 0.05, description: 'Switch point' },
+      { name: 'cutoff', type: 'number', default: 0.5, min: 0, max: 1, step: 0.05, description: 'Switch point' },
+      { name: 'invert', type: 'boolean', default: false, description: 'Flip output (1 below cutoff, 0 above)' },
     ],
   },
-  factory: (opts?: { threshold?: number }) => {
-    const threshold = opts?.threshold ?? 0.5;
-    return (ctx) => ctx.t < threshold ? 0 : 1;
+  factory: (opts?: { cutoff?: number; invert?: boolean }) => {
+    const cutoff = opts?.cutoff ?? 0.5;
+    const invert = opts?.invert ?? false;
+    return (ctx) => {
+      const above = ctx.t >= cutoff ? 1 : 0;
+      return invert ? 1 - above : above;
+    };
   },
 };
+
+// Alias for backward compatibility
+export const step = threshold;
 
 export const pulse: MapperEntry = {
   meta: {
     name: 'pulse',
-    description: 'Gaussian-like peak at center',
+    description: 'Gaussian-like peak at adjustable center',
     category: 'pulse',
     options: [
+      { name: 'center', type: 'number', default: 0.5, min: 0, max: 1, step: 0.05, description: 'Peak position' },
       { name: 'width', type: 'number', default: 0.2, min: 0.05, max: 0.5, step: 0.05, description: 'Peak width' },
       { name: 'sharpness', type: 'number', default: 2, min: 1, max: 8, step: 0.5, description: 'Falloff sharpness' },
     ],
   },
-  factory: (opts?: { width?: number; sharpness?: number }) => {
+  factory: (opts?: { center?: number; width?: number; sharpness?: number }) => {
+    const center = opts?.center ?? 0.5;
     const width = opts?.width ?? 0.2;
     const sharpness = opts?.sharpness ?? 2;
-    return (ctx) => Math.exp(-Math.pow((ctx.t - 0.5) / width, sharpness * 2));
+    return (ctx) => Math.exp(-Math.pow((ctx.t - center) / width, sharpness * 2));
   },
 };
 
-export const square: MapperEntry = {
-  meta: {
-    name: 'square',
-    description: 'Square wave (on for duty cycle, off otherwise)',
-    category: 'pulse',
-    options: [
-      { name: 'duty', type: 'number', default: 0.5, min: 0.1, max: 0.9, step: 0.1, description: 'Duty cycle' },
-    ],
-  },
-  factory: (opts?: { duty?: number }) => {
-    const duty = opts?.duty ?? 0.5;
-    return (ctx) => ctx.t < duty ? 1 : 0;
-  },
-};
 
 export const spot: MapperEntry = {
   meta: {
@@ -170,20 +145,6 @@ export const spotLinear: MapperEntry = {
   },
 };
 
-export const spotBinary: MapperEntry = {
-  meta: {
-    name: 'spotBinary',
-    description: 'Hard cutoff at width',
-    category: 'pulse',
-    options: [
-      { name: 'width', type: 'number', default: 0.15, min: 0.05, max: 0.5, step: 0.05, description: 'Spot width' },
-    ],
-  },
-  factory: (opts?: { width?: number }) => {
-    const width = opts?.width ?? 0.15;
-    return (ctx) => ctx.t < width ? 1 : 0;
-  },
-};
 
 // === EASING MAPPERS (acceleration curves) ===
 
@@ -329,40 +290,24 @@ export const harmonic: MapperEntry = {
 export const interference: MapperEntry = {
   meta: {
     name: 'interference',
-    description: 'Two waves at different frequencies',
+    description: 'Two waves at different frequencies (use ratio=1.5, phase=0.5 for helix)',
     category: 'harmonic',
     options: [
-      { name: 'ratio', type: 'number', default: 1.5, min: 1.1, max: 3, step: 0.1, description: 'Frequency ratio' },
+      { name: 'ratio', type: 'number', default: 1.5, min: 1.0, max: 3, step: 0.1, description: 'Frequency ratio of second wave' },
+      { name: 'phase', type: 'number', default: 0, min: 0, max: 1, step: 0.05, description: 'Phase offset of second wave' },
     ],
   },
-  factory: (opts?: { ratio?: number }) => {
+  factory: (opts?: { ratio?: number; phase?: number }) => {
     const ratio = opts?.ratio ?? 1.5;
+    const phase = opts?.phase ?? 0;
     return (ctx) => {
       const w1 = Math.sin(ctx.t * Math.PI * 2);
-      const w2 = Math.sin(ctx.t * Math.PI * 2 * ratio);
+      const w2 = Math.sin((ctx.t + phase) * Math.PI * 2 * ratio);
       return ((w1 + w2) / 2 + 1) / 2;
     };
   },
 };
 
-export const doubleHelix: MapperEntry = {
-  meta: {
-    name: 'doubleHelix',
-    description: 'Two out-of-phase waves creating helix pattern',
-    category: 'harmonic',
-    options: [
-      { name: 'phaseOffset', type: 'number', default: 0.5, min: 0.1, max: 1, step: 0.1, description: 'Phase offset between waves' },
-    ],
-  },
-  factory: (opts?: { phaseOffset?: number }) => {
-    const offset = opts?.phaseOffset ?? 0.5;
-    return (ctx) => {
-      const w1 = (Math.sin(ctx.t * Math.PI * 2) + 1) / 2;
-      const w2 = (Math.sin((ctx.t + offset) * Math.PI * 2 * 1.5) + 1) / 2;
-      return (w1 + w2) / 2;
-    };
-  },
-};
 
 export const pendulum: MapperEntry = {
   meta: {
@@ -409,22 +354,154 @@ export const bands: MapperEntry = {
   },
 };
 
+export const softBands: MapperEntry = {
+  meta: {
+    name: 'softBands',
+    description: 'Smooth undulating bands with soft transitions',
+    category: 'step',
+    options: [
+      { name: 'numBands', type: 'number', default: 4, min: 2, max: 10, step: 1, description: 'Number of bands' },
+      { name: 'softness', type: 'number', default: 0.3, min: 0.1, max: 0.9, step: 0.1, description: 'Transition smoothness' },
+    ],
+  },
+  factory: (opts?: { numBands?: number; softness?: number }) => {
+    const numBands = opts?.numBands ?? 4;
+    const softness = opts?.softness ?? 0.3;
+    return (ctx) => {
+      // Create smooth sine-based bands instead of hard steps
+      const bandPhase = ctx.t * numBands * Math.PI;
+      const raw = (Math.sin(bandPhase) + 1) / 2;
+      // Softness controls how much we flatten the peaks/troughs
+      // At softness=0, it's a pure sine; at softness=1, it's nearly square
+      const shaped = Math.pow(raw, 1 - softness * 0.8);
+      return shaped;
+    };
+  },
+};
+
+// === DYNAMIC MAPPERS (time-dependent flowing effects) ===
+
+export const wavePacket: MapperEntry = {
+  meta: {
+    name: 'wavePacket',
+    description: 'Localized oscillation that fades at edges',
+    category: 'harmonic',
+    options: [
+      { name: 'frequency', type: 'number', default: 3, min: 1, max: 8, step: 1, description: 'Oscillation frequency' },
+      { name: 'width', type: 'number', default: 0.4, min: 0.1, max: 0.8, step: 0.1, description: 'Packet width' },
+      { name: 'center', type: 'number', default: 0.5, min: 0, max: 1, step: 0.1, description: 'Packet center' },
+    ],
+  },
+  factory: (opts?: { frequency?: number; width?: number; center?: number }) => {
+    const frequency = opts?.frequency ?? 3;
+    const width = opts?.width ?? 0.4;
+    const center = opts?.center ?? 0.5;
+    return (ctx) => {
+      // Gaussian envelope
+      const envelope = Math.exp(-Math.pow((ctx.t - center) / width, 2));
+      // Oscillation within the envelope
+      const oscillation = (Math.sin(ctx.t * Math.PI * 2 * frequency) + 1) / 2;
+      // Combine: oscillation fades to 0.5 (neutral) outside the packet
+      return 0.5 + (oscillation - 0.5) * envelope;
+    };
+  },
+};
+
+export const counterFlow: MapperEntry = {
+  meta: {
+    name: 'counterFlow',
+    description: 'Two waves flowing in opposite directions',
+    category: 'harmonic',
+    options: [
+      { name: 'speed', type: 'number', default: 0.3, min: 0.05, max: 1, step: 0.05, description: 'Flow speed' },
+      { name: 'frequency', type: 'number', default: 2, min: 1, max: 6, step: 1, description: 'Wave frequency' },
+    ],
+  },
+  factory: (opts?: { speed?: number; frequency?: number }) => {
+    const speed = opts?.speed ?? 0.3;
+    const frequency = opts?.frequency ?? 2;
+    return (ctx) => {
+      const phase = ctx.time * speed;
+      // Two waves traveling in opposite directions
+      const wave1 = Math.sin((ctx.t + phase) * Math.PI * 2 * frequency);
+      const wave2 = Math.sin((ctx.t - phase) * Math.PI * 2 * frequency);
+      // Interference pattern
+      return ((wave1 + wave2) / 2 + 1) / 2;
+    };
+  },
+};
+
+export const flowingBands: MapperEntry = {
+  meta: {
+    name: 'flowingBands',
+    description: 'Discrete bands that flow and morph',
+    category: 'step',
+    options: [
+      { name: 'numBands', type: 'number', default: 4, min: 2, max: 8, step: 1, description: 'Number of bands' },
+      { name: 'speed', type: 'number', default: 0.2, min: 0.05, max: 0.5, step: 0.05, description: 'Flow speed' },
+      { name: 'waveAmount', type: 'number', default: 0.3, min: 0, max: 0.5, step: 0.1, description: 'Wave distortion amount' },
+    ],
+  },
+  factory: (opts?: { numBands?: number; speed?: number; waveAmount?: number }) => {
+    const numBands = opts?.numBands ?? 4;
+    const speed = opts?.speed ?? 0.2;
+    const waveAmount = opts?.waveAmount ?? 0.3;
+    return (ctx) => {
+      // Add time-based wave distortion to the t value before banding
+      const waveOffset = Math.sin(ctx.time * speed * Math.PI * 2) * waveAmount;
+      const distortedT = ctx.t + waveOffset * Math.sin(ctx.t * Math.PI * 2);
+      // Soft banding on the distorted value
+      const bandPhase = distortedT * numBands * Math.PI;
+      return (Math.sin(bandPhase) + 1) / 2;
+    };
+  },
+};
+
+export const collision: MapperEntry = {
+  meta: {
+    name: 'collision',
+    description: 'Bands that push against each other from edges',
+    category: 'harmonic',
+    options: [
+      { name: 'speed', type: 'number', default: 0.3, min: 0.05, max: 0.8, step: 0.05, description: 'Collision speed' },
+      { name: 'sharpness', type: 'number', default: 4, min: 1, max: 10, step: 1, description: 'Edge sharpness' },
+    ],
+  },
+  factory: (opts?: { speed?: number; sharpness?: number }) => {
+    const speed = opts?.speed ?? 0.3;
+    const sharpness = opts?.sharpness ?? 4;
+    return (ctx) => {
+      // Two fronts approaching from edges, meeting in middle
+      const phase = (Math.sin(ctx.time * speed * Math.PI * 2) + 1) / 2; // 0 to 1 oscillation
+      const meetPoint = 0.5;
+
+      // Left front coming from 0, right front coming from 1
+      const leftFront = phase * meetPoint; // 0 to 0.5
+      const rightFront = 1 - phase * meetPoint; // 1 to 0.5
+
+      // Smooth step function for each front
+      const leftValue = 1 / (1 + Math.exp(-sharpness * (ctx.t - leftFront) * 10));
+      const rightValue = 1 / (1 + Math.exp(-sharpness * (rightFront - ctx.t) * 10));
+
+      // Combine: high where both fronts have passed
+      return leftValue * rightValue;
+    };
+  },
+};
+
 // === CATALOG ===
 
 export const mapperCatalog: Record<string, MapperEntry> = {
   // Wave
   identity,
   sine,
-  cosine,
   triangle,
-  sawtooth,
   // Pulse
-  step,
+  threshold,
+  step, // alias for threshold (backward compatibility)
   pulse,
-  square,
   spot,
   spotLinear,
-  spotBinary,
   // Easing
   easeIn,
   easeOut,
@@ -436,11 +513,15 @@ export const mapperCatalog: Record<string, MapperEntry> = {
   // Harmonic
   harmonic,
   interference,
-  doubleHelix,
   pendulum,
-  // Step
+  wavePacket,
+  counterFlow,
+  collision,
+  // Step/Bands
   steps,
   bands,
+  softBands,
+  flowingBands,
 };
 
 // Helper to get a mapper by name

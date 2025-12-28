@@ -9,7 +9,7 @@ import {
   focalSpread, focalSpreadAbsolute,
   fieldRoll, fieldBounce, fieldRollAbsolute, fieldBounceAbsolute,
 } from './motion';
-import { spotBinary, spotLinear, sine, harmonic as harmonicMapper, interference as interferenceMapper, doubleHelix as doubleHelixMapper } from './mappers';
+import { threshold, spotLinear, sine, harmonic as harmonicMapper, interference as interferenceMapper } from './mappers';
 
 // === OPTION TYPES ===
 
@@ -138,7 +138,7 @@ export function cascade(options: CascadeOptions = {}): DashEvolver {
 
   return createDashEvolver(
     motion,
-    toBinaryDash(spotBinary(width), 0.5),
+    toBinaryDash(threshold(width), 0.5),
     'cascade'
   );
 }
@@ -215,6 +215,7 @@ export function ripple(options: RippleOptions = {}): DashEvolver {
 
 /**
  * DoubleHelix - two out-of-phase sine waves
+ * Uses interference mapper with ratio=1.5 and phase offset
  */
 export function doubleHelix(options: DoubleHelixOptions = {}): DashEvolver {
   const {
@@ -229,9 +230,18 @@ export function doubleHelix(options: DoubleHelixOptions = {}): DashEvolver {
       ? (speedMode === 'absolute' ? fieldRollAbsolute(speed) : fieldRoll(speed))
       : (speedMode === 'absolute' ? fieldBounceAbsolute(speed) : fieldBounce(speed));
 
+  // doubleHelix is interference with specific params (ratio ~1.5, phase offset)
+  // Use a custom inline mapper that replicates the original behavior
+  const helixMapper = (t: number, ctx: { time: number }) => {
+    const time = ctx.time * 0.15;
+    const wave1 = (Math.sin((t + time) * Math.PI * 2) + 1) / 2;
+    const wave2 = (Math.sin((t + time + 0.5) * Math.PI * 2 * 1.5) + 1) / 2;
+    return (wave1 + wave2) / 2;
+  };
+
   return createDashEvolver(
     motion,
-    toDashGap(doubleHelixMapper(0.5), maxGap, 8),
+    toDashGap(helixMapper, maxGap, 8),
     'doubleHelix'
   );
 }
