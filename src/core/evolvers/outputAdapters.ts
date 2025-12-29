@@ -2,8 +2,8 @@
 // These are the final stage of the Motion -> Mapper -> Output pipeline
 
 import type { DashValue } from './types';
-import type { Palette } from './palettes';
-import { samplePalette, hslToString } from './palettes';
+import type { Palette } from '../palette';
+import { samplePalette, hslToString } from '../palette';
 
 // === OUTPUT CONFIG TYPES ===
 

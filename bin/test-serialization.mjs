@@ -1,7 +1,19 @@
 // Test serialization round-trip using the actual serialize.ts module
-import { serializeState, deserializeState } from '../src/serialize.ts';
-import { mapperCatalog as serializationMapperCatalog } from '../src/catalogs.ts';
-import { mapperCatalog as realMapperCatalog } from '../src/evolvers/mapperCatalog.ts';
+import { serializeState, deserializeState, motionParamDefs } from '../src/serialize.ts';
+
+// Import all registrations to populate registries
+import '../src/placers/index.ts';
+import '../src/movers/index.ts';
+import '../src/mappers/index.ts';
+import '../src/palettes/index.ts';
+
+// Import registry functions
+import {
+  getAllMappers,
+  getAllPlacers,
+  getAllMovers,
+  getAllPalettes,
+} from '../src/core/registry.ts';
 
 // Deep comparison helper with configurable tolerance
 function deepCompare(path, a, b, tolerance = 0.05) {
@@ -59,53 +71,38 @@ function deepCompare(path, a, b, tolerance = 0.05) {
   return errors;
 }
 
-// Get all mapper names from serialization catalog
-const mapperNames = Object.keys(serializationMapperCatalog);
-const realMapperNames = Object.keys(realMapperCatalog);
+// Get all registered entities
+const mappers = getAllMappers();
+const placers = getAllPlacers();
+const movers = getAllMovers();
+const palettes = getAllPalettes();
 
-console.log('=== Catalog Sync Check ===');
-// Check for mappers in real catalog that are missing from serialization catalog
-const missingInSerialization = realMapperNames.filter(n => !serializationMapperCatalog[n]);
-if (missingInSerialization.length > 0) {
-  console.log('✗ Mappers missing from serialization catalog:', missingInSerialization);
-}
-// Check for mappers in serialization catalog that are missing from real catalog
-const missingInReal = mapperNames.filter(n => !realMapperCatalog[n]);
-if (missingInReal.length > 0) {
-  console.log('✗ Mappers in serialization catalog but not in real catalog:', missingInReal);
-}
-if (missingInSerialization.length === 0 && missingInReal.length === 0) {
-  console.log('✓ All mappers present in both catalogs');
+console.log('=== Registry Check ===');
+console.log(`Mappers registered: ${mappers.length}`);
+console.log(`Placers registered: ${placers.length}`);
+console.log(`Movers registered: ${movers.length}`);
+console.log(`Palettes registered: ${palettes.length}`);
+
+if (mappers.length === 0) {
+  console.log('✗ No mappers registered! Registry imports may have failed.');
+  process.exit(1);
 }
 
-// Check for parameter mismatches
-console.log('\n=== Parameter Definition Check ===');
-let paramMismatches = 0;
-for (const name of mapperNames) {
-  const serEntry = serializationMapperCatalog[name];
-  const realEntry = realMapperCatalog[name];
+// Check motion parameter definitions match MotionConfig
+console.log('\n=== Motion Parameter Check ===');
+const expectedMotionParams = ['mode', 'edge', 'speed', 'reversed', 'phaseSpread', 'phaseOffset', 'waves', 'alternate'];
+const actualMotionParams = motionParamDefs.map(p => p[0]);
+const missingMotion = expectedMotionParams.filter(p => !actualMotionParams.includes(p));
+const extraMotion = actualMotionParams.filter(p => !expectedMotionParams.includes(p));
 
-  if (!realEntry) continue; // Already reported above
-
-  const serParams = serEntry.params.map(p => p[0]);
-  const realOptions = realEntry.meta.options.map(o => o.name);
-
-  const missingInSer = realOptions.filter(p => !serParams.includes(p));
-  const extraInSer = serParams.filter(p => !realOptions.includes(p));
-
-  if (missingInSer.length > 0 || extraInSer.length > 0) {
-    paramMismatches++;
-    console.log(`✗ ${name}:`);
-    if (missingInSer.length > 0) {
-      console.log(`    Missing from serialization: ${missingInSer.join(', ')}`);
-    }
-    if (extraInSer.length > 0) {
-      console.log(`    Extra in serialization: ${extraInSer.join(', ')}`);
-    }
-  }
+if (missingMotion.length > 0) {
+  console.log(`✗ Missing motion params in serialization: ${missingMotion.join(', ')}`);
 }
-if (paramMismatches === 0) {
-  console.log('✓ All mapper parameters match');
+if (extraMotion.length > 0) {
+  console.log(`✗ Extra motion params in serialization: ${extraMotion.join(', ')}`);
+}
+if (missingMotion.length === 0 && extraMotion.length === 0) {
+  console.log('✓ Motion parameters match MotionConfig');
 }
 
 // Create a default motion config
@@ -114,8 +111,9 @@ function defaultMotion() {
     mode: 'field',
     speed: 0.2,
     edge: 'wrap',
-    phaseSpread: 0,
-    waves: 1,
+    phaseSpread: 0.5,
+    phaseOffset: 0.1,
+    waves: 1.5,
     reversed: false,
     alternate: false,
   };
@@ -150,6 +148,9 @@ function testRoundTrip(name, state) {
 
 console.log('\n=== Round-Trip Tests ===');
 
+let passCount = 0;
+let failCount = 0;
+
 // Test 1: Basic state with all required fields
 const basicState = {
   seed: 0x12345678,
@@ -165,7 +166,12 @@ const basicState = {
   color: createSlot('identity', {}, { palette: 'sunset' }),
   lineWidth: createSlot('identity', {}, { min: 0.5, max: 2 }),
 };
-testRoundTrip('Basic state with identity mapper', basicState);
+
+if (testRoundTrip('Basic state with identity mapper', basicState)) {
+  passCount++;
+} else {
+  failCount++;
+}
 
 // Test 2: State with sine mapper and options
 const sineState = {
@@ -173,7 +179,12 @@ const sineState = {
   seed: 0xABCDEF00,
   dash: createSlot('sine', { frequency: 2, phase: 0.25 }, { dashLen: 15, maxGap: 30, marching: 5 }),
 };
-testRoundTrip('Sine mapper with frequency and phase', sineState);
+
+if (testRoundTrip('Sine mapper with frequency and phase', sineState)) {
+  passCount++;
+} else {
+  failCount++;
+}
 
 // Test 3: State with threshold mapper and invert
 const thresholdState = {
@@ -181,48 +192,56 @@ const thresholdState = {
   seed: 0xDEADBEEF,
   dash: createSlot('threshold', { cutoff: 0.7, invert: true }, { dashLen: 8, maxGap: 25, marching: 0 }),
 };
-testRoundTrip('Threshold mapper with cutoff and invert', thresholdState);
 
-// Test 4: State with pulse mapper and all options
-const pulseState = {
+if (testRoundTrip('Threshold mapper with cutoff and invert', thresholdState)) {
+  passCount++;
+} else {
+  failCount++;
+}
+
+// Test 4: Motion parameters round-trip
+console.log('\n=== Motion Parameter Round-Trip ===');
+const motionTestState = {
   ...basicState,
-  seed: 0xCAFEBABE,
-  dash: createSlot('pulse', { center: 0.3, width: 0.15, sharpness: 4 }, { dashLen: 12, maxGap: 22, marching: 10 }),
+  seed: 0x11223344,
+  dash: {
+    ...basicState.dash,
+    motion: {
+      mode: 'focal',
+      speed: 0.35,
+      edge: 'bounce',
+      phaseSpread: 0.7,
+      phaseOffset: 0.3,
+      waves: 2.5,
+      reversed: true,
+      alternate: true,
+    },
+  },
 };
-testRoundTrip('Pulse mapper with center, width, and sharpness', pulseState);
+
+if (testRoundTrip('Motion parameters (all fields)', motionTestState)) {
+  passCount++;
+} else {
+  failCount++;
+}
 
 // Test 5: Test all mappers individually
 console.log('\n=== Individual Mapper Tests ===');
-let passCount = 0;
-let failCount = 0;
 
-for (const mapperName of mapperNames) {
-  const serEntry = serializationMapperCatalog[mapperName];
-  const realEntry = realMapperCatalog[mapperName];
-
-  if (!realEntry) {
-    console.log(`⚠ Skipping ${mapperName} (not in real catalog)`);
-    continue;
-  }
-
-  // Build mapperOptions from the real mapper's option defaults
+for (const mapper of mappers) {
+  // Build mapperOptions from the mapper's param defaults
   const mapperOptions = {};
-  for (const opt of realEntry.meta.options) {
+  for (const [paramName, schema] of Object.entries(mapper.params)) {
     // Use a non-default value to ensure it's being serialized
-    if (opt.type === 'number') {
-      // Use midpoint between min and max, or default if not specified
-      let value = opt.min !== undefined && opt.max !== undefined
-        ? (opt.min + opt.max) / 2
-        : opt.default;
-      // Round to integer if step is 1 (integer parameter like numBands, harmonics)
-      if (opt.step === 1 || opt.step === undefined && Number.isInteger(opt.min) && Number.isInteger(opt.max)) {
+    if (schema.min !== undefined && schema.max !== undefined) {
+      let value = (schema.min + schema.max) / 2;
+      // Round to integer if step is 1
+      if (schema.step === 1) {
         value = Math.round(value);
       }
-      mapperOptions[opt.name] = value;
-    } else if (opt.type === 'boolean') {
-      mapperOptions[opt.name] = !opt.default; // Use opposite of default
+      mapperOptions[paramName] = value;
     } else {
-      mapperOptions[opt.name] = opt.default;
+      mapperOptions[paramName] = schema.default;
     }
   }
 
@@ -233,9 +252,9 @@ for (const mapperName of mapperNames) {
     speed: 1.0,
     distribution: { type: 'star', params: {} },
     positionEvolvers: [],
-    dash: createSlot(mapperName, mapperOptions, { dashLen: 10, maxGap: 20, marching: 0 }),
+    dash: createSlot(mapper.name, mapperOptions, { dashLen: 10, maxGap: 20, marching: 0 }),
     alpha: createSlot('identity', {}, { min: 0.2, max: 0.9 }),
-    color: createSlot('identity', {}, { palette: 'aurora' }),
+    color: createSlot('identity', {}, { palette: 'sunset' }),
     lineWidth: createSlot('identity', {}, { min: 1, max: 3 }),
   };
 
@@ -268,59 +287,74 @@ for (const mapperName of mapperNames) {
     }
   }
 
-  // Check for options that appeared in deserialized but weren't in original
-  for (const optName of Object.keys(deserializedOpts)) {
-    if (!(optName in originalOpts)) {
-      // This is expected for params with defaults - just note it
-      // optionErrors.push(`${optName}: unexpected (got ${deserializedOpts[optName]})`);
-    }
-  }
-
   if (optionErrors.length === 0) {
-    console.log(`✓ ${mapperName}`);
+    console.log(`✓ ${mapper.name}`);
     passCount++;
   } else {
-    console.log(`✗ ${mapperName}:`);
+    console.log(`✗ ${mapper.name}:`);
     optionErrors.forEach(e => console.log(`    ${e}`));
     failCount++;
   }
 }
 
-// Test distributions and position evolvers sync
-import { distributionCatalog, positionEvolverCatalog } from '../src/catalogs.ts';
-import { Distributions } from '../src/distributions/index.ts';
+// Test distributions
+console.log('\n=== Distribution Tests ===');
+for (const placer of placers) {
+  const params = {};
+  for (const [paramName, schema] of Object.entries(placer.params)) {
+    params[paramName] = schema.default;
+  }
 
-console.log('\n=== Distribution Catalog Sync ===');
-const distNames = Object.keys(distributionCatalog);
-const realDistNames = Object.keys(Distributions);
-const missingDists = realDistNames.filter(n => !distributionCatalog[n]);
-const extraDists = distNames.filter(n => !Distributions[n]);
-if (missingDists.length > 0) {
-  console.log('✗ Distributions missing from serialization catalog:', missingDists);
-  failCount++;
-} else if (extraDists.length > 0) {
-  console.log('✗ Distributions in serialization but not in real:', extraDists);
-  failCount++;
-} else {
-  console.log('✓ All distributions present in both catalogs');
+  const testState = {
+    ...basicState,
+    distribution: { type: placer.name, params },
+  };
+
+  if (testRoundTrip(`Distribution: ${placer.name}`, testState)) {
+    passCount++;
+  } else {
+    failCount++;
+  }
 }
 
-// Test a complex state with multiple position evolvers
+// Test movers
+console.log('\n=== Mover Tests ===');
+for (const mover of movers) {
+  const params = {};
+  for (const [paramName, schema] of Object.entries(mover.params)) {
+    params[paramName] = schema.default;
+  }
+
+  const testState = {
+    ...basicState,
+    positionEvolvers: [{ type: mover.name, params }],
+  };
+
+  if (testRoundTrip(`Mover: ${mover.name}`, testState)) {
+    passCount++;
+  } else {
+    failCount++;
+  }
+}
+
+// Test complex state with multiple position evolvers
 console.log('\n=== Complex State Test ===');
 const complexState = {
   seed: 0x87654321,
   lineCount: 150,
   fade: 0.8,
   speed: 2.0,
-  distribution: { type: 'lissajous', params: { a: 3, b: 5, delta: 1.5 } },
-  positionEvolvers: [
-    { type: 'rotate', params: { speed: 0.15 } },
-    { type: 'breathe', params: { amplitude: 0.1, speed: 0.2, phaseSpread: 0.5 } },
-  ],
-  dash: createSlot('wavePacket', { frequency: 4, width: 0.5, center: 0.6 }, { dashLen: 12, maxGap: 25, marching: 3 }),
-  alpha: createSlot('softBands', { numBands: 5, softness: 0.4 }, { min: 0.4, max: 0.95 }),
-  color: createSlot('counterFlow', { speed: 0.2, frequency: 3 }, { palette: 'cosmic' }),
-  lineWidth: createSlot('collision', { speed: 0.25, sharpness: 6 }, { min: 0.8, max: 2.5 }),
+  distribution: { type: placers[0]?.name || 'star', params: {} },
+  positionEvolvers: movers.slice(0, 2).map(m => ({
+    type: m.name,
+    params: Object.fromEntries(
+      Object.entries(m.params).map(([k, v]) => [k, v.default])
+    ),
+  })),
+  dash: createSlot('sine', { frequency: 2, phase: 0.5 }, { dashLen: 12, maxGap: 25, marching: 3 }),
+  alpha: createSlot('threshold', { cutoff: 0.6, invert: false }, { min: 0.4, max: 0.95 }),
+  color: createSlot('identity', {}, { palette: palettes[0]?.name || 'sunset' }),
+  lineWidth: createSlot('pulse', { center: 0.5, width: 0.3, sharpness: 3 }, { min: 0.8, max: 2.5 }),
 };
 
 if (testRoundTrip('Complex state with multiple evolvers', complexState)) {
@@ -333,7 +367,7 @@ console.log(`\n=== Final Summary ===`);
 console.log(`Passed: ${passCount}/${passCount + failCount}`);
 console.log(`Failed: ${failCount}/${passCount + failCount}`);
 
-if (failCount > 0 || paramMismatches > 0) {
+if (failCount > 0 || missingMotion.length > 0 || extraMotion.length > 0) {
   process.exit(1);
 } else {
   console.log('\n✓ All serialization tests passed!');

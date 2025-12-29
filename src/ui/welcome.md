@@ -1,8 +1,10 @@
 # Welcome to OnlyLines
 
-All the art you see here is procedurally generated using **only lines**.
+All the visuals you see here are generated using **only lines**.
 
-Specifically, lines that connect from one edge of the canvas to another. Can we get anything good?
+Specifically, *straight* lines locked to the *perimeter of the canvas*.
+
+No curves, gradients, fills, shadows, textures, no anything. Only *lines*!
 
 ## Quick Start
 - Click anywhere to generate a new piece

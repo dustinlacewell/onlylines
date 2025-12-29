@@ -2,7 +2,7 @@
 // Separates motion computation from mapping functions
 // See /llm/evolver-architecture.md for full design
 
-import type { Line } from '../line';
+import type { Line } from '../../line';
 
 // === MOTION CONFIG ===
 // System-level configuration that determines how t is computed for each line

@@ -41,9 +41,12 @@ export const wavePacket = registerMapper({
     center: [0.3, 0.7],
   },
 
-  create: ({ frequency, width, center }) => (ctx) => {
-    const envelope = Math.exp(-Math.pow((ctx.t - center) / width, 2));
-    const oscillation = (Math.sin(ctx.t * Math.PI * 2 * frequency) + 1) / 2;
-    return 0.5 + (oscillation - 0.5) * envelope;
+  create: ({ frequency, width, center }) => {
+    const safeWidth = Math.max(0.001, width);
+    return (ctx) => {
+      const envelope = Math.exp(-Math.pow((ctx.t - center) / safeWidth, 2));
+      const oscillation = (Math.sin(ctx.t * Math.PI * 2 * frequency) + 1) / 2;
+      return 0.5 + (oscillation - 0.5) * envelope;
+    };
   },
 });

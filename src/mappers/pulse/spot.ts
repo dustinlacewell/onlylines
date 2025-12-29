@@ -23,5 +23,8 @@ export const spot = registerMapper({
     width: [0.1, 0.3],
   },
 
-  create: ({ width }) => (ctx) => Math.exp(-Math.pow(ctx.t / width, 2)),
+  create: ({ width }) => {
+    const safeWidth = Math.max(0.001, width);
+    return (ctx) => Math.exp(-Math.pow(ctx.t / safeWidth, 2));
+  },
 });

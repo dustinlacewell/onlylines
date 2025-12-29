@@ -1,11 +1,11 @@
 import type { WorldConfig, World as IWorld, EvolverSet } from './types';
 import type { Line } from './line';
-import { makeLineContext, type DashValue } from './evolvers/types';
+import { makeLineContext, type DashValue } from './core/evolvers/types';
 import { mod } from './utils';
 import {
   type WorldEvolverConfig,
   createEvolversFromConfig,
-} from './evolvers/evolverFactory';
+} from './core/evolvers/evolverFactory';
 import { evolverStoreApi } from './storeReact';
 
 export class World implements IWorld {

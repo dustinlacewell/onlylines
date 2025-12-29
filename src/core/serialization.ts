@@ -6,13 +6,12 @@ import {
   getAllPlacers,
   getAllMovers,
   getAllMappers,
-  getAllPalettes,
   getPlacerById,
   getMoverById,
   getMapperById,
-  getPaletteById,
   type ParamSchema,
 } from './registry';
+import { getAllPalettes, getPaletteById } from './palette';
 import { schemaToParamDefs } from './paramTypes';
 
 // === LOCAL TYPES ===

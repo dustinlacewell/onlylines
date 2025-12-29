@@ -1,5 +1,4 @@
-import type { Line } from '../line';
-import type { WaveContext } from './waves';
+import type { Line } from '../../line';
 
 // Forward reference to avoid circular dependency
 export interface EvolverWorld {
@@ -9,7 +8,11 @@ export interface EvolverWorld {
 }
 
 // Context for per-line evolvers
-export interface LineContext extends WaveContext {
+export interface LineContext {
+  index: number;
+  total: number;
+  time: number;
+  dt: number;
   line: Line;
   world: EvolverWorld;
 }

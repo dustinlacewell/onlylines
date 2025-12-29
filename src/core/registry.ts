@@ -116,16 +116,6 @@ export interface MapperDefinition<TParams extends Record<string, ParamSchema> = 
   create: (params: ParamValues<TParams>) => Mapper;
 }
 
-// === PALETTE DEFINITION ===
-
-export interface PaletteDefinition {
-  id: number;
-  name: string;
-  category?: string;
-  description?: string;
-  colors: string[];
-}
-
 // === REGISTRIES ===
 
 const placerRegistry = new Map<string, PlacerDefinition>();
@@ -136,9 +126,6 @@ const moverById = new Map<number, MoverDefinition>();
 
 const mapperRegistry = new Map<string, MapperDefinition>();
 const mapperById = new Map<number, MapperDefinition>();
-
-const paletteRegistry = new Map<string, PaletteDefinition>();
-const paletteById = new Map<number, PaletteDefinition>();
 
 // === VALIDATION ===
 
@@ -163,6 +150,13 @@ function validateIdUnique<T extends { id: number; name: string }>(
 }
 
 function clampParam(value: number, schema: ParamSchema, paramName: string, entityName: string): number {
+  // Handle NaN or undefined by using default
+  if (!Number.isFinite(value)) {
+    console.warn(
+      `${entityName}.${paramName}: invalid value ${value}, using default ${schema.default}`
+    );
+    return schema.default;
+  }
   const min = schema.min ?? -Infinity;
   const max = schema.max ?? Infinity;
   if (value < min || value > max) {
@@ -218,13 +212,6 @@ export function registerMapper<TParams extends Record<string, ParamSchema>>(
   return def;
 }
 
-export function registerPalette(def: PaletteDefinition): PaletteDefinition {
-  validateIdUnique(paletteById, paletteRegistry, def, 'Palette');
-  paletteRegistry.set(def.name, def);
-  paletteById.set(def.id, def);
-  return def;
-}
-
 // === LOOKUP FUNCTIONS ===
 
 export function getPlacer(name: string): PlacerDefinition | undefined {
@@ -251,14 +238,6 @@ export function getMapperById(id: number): MapperDefinition | undefined {
   return mapperById.get(id);
 }
 
-export function getPalette(name: string): PaletteDefinition | undefined {
-  return paletteRegistry.get(name);
-}
-
-export function getPaletteById(id: number): PaletteDefinition | undefined {
-  return paletteById.get(id);
-}
-
 // === ENUMERATION ===
 
 export function getAllPlacers(): PlacerDefinition[] {
@@ -271,10 +250,6 @@ export function getAllMovers(): MoverDefinition[] {
 
 export function getAllMappers(): MapperDefinition[] {
   return [...mapperRegistry.values()];
-}
-
-export function getAllPalettes(): PaletteDefinition[] {
-  return [...paletteRegistry.values()];
 }
 
 // Group by category
@@ -304,6 +279,17 @@ export function getMappersByCategory(): Record<string, MapperDefinition[]> {
     const cat = def.category ?? 'other';
     if (!result[cat]) result[cat] = [];
     result[cat].push(def);
+  }
+  return result;
+}
+
+// Get mapper names grouped by category (for UI dropdowns)
+export function getMapperNamesByCategory(): Record<string, string[]> {
+  const result: Record<string, string[]> = {};
+  for (const def of mapperRegistry.values()) {
+    const cat = def.category ?? 'other';
+    if (!result[cat]) result[cat] = [];
+    result[cat].push(def.name);
   }
   return result;
 }

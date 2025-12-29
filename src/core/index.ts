@@ -10,7 +10,6 @@ export {
   type PlacerDefinition,
   type MoverDefinition,
   type MapperDefinition,
-  type PaletteDefinition,
   type Mapper,
   type MapperContext,
   type LineContext,
@@ -23,28 +22,25 @@ export {
   registerPlacer,
   registerMover,
   registerMapper,
-  registerPalette,
 
   // Lookup by name
   getPlacer,
   getMover,
   getMapper,
-  getPalette,
 
   // Lookup by ID (for deserialization)
   getPlacerById,
   getMoverById,
   getMapperById,
-  getPaletteById,
 
   // Enumeration
   getAllPlacers,
   getAllMovers,
   getAllMappers,
-  getAllPalettes,
   getPlacersByCategory,
   getMoversByCategory,
   getMappersByCategory,
+  getMapperNamesByCategory,
 
   // Factories (with validation)
   createPlacer,
@@ -56,6 +52,24 @@ export {
   randomizeMover,
   randomizeMapper,
 } from './registry';
+
+// Palette types and utilities
+export {
+  type HSL,
+  type Palette,
+  type PaletteDefinition,
+  registerPalette,
+  getPalette,
+  getPaletteById,
+  getAllPalettes,
+  parseHSL,
+  lerpHSL,
+  samplePalette,
+  samplePaletteWrap,
+  hslToString,
+  toPalette,
+  getRuntimePalette,
+} from './palette';
 
 export {
   paramTypeMap,

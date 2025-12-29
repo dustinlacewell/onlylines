@@ -3,12 +3,12 @@
 
 import { createStore } from 'zustand/vanilla';
 import { persist } from 'zustand/middleware';
-import { type MotionConfig } from './evolvers/system';
+import { type MotionConfig } from './core/evolvers/system';
 import {
   type WorldEvolverConfig,
   presets,
   type PresetName,
-} from './evolvers/evolverFactory';
+} from './core/evolvers/evolverFactory';
 
 // === SLOT STATE ===
 

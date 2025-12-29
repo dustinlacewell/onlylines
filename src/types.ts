@@ -1,5 +1,5 @@
 import type { Line } from './line';
-import type { EvolverSet } from './evolvers/types';
+import type { EvolverSet } from './core/evolvers/types';
 
 // Re-export evolver types
 export type {
@@ -7,7 +7,7 @@ export type {
   PositionEvolver,
   ColorEvolver,
   NumberEvolver,
-} from './evolvers/types';
+} from './core/evolvers/types';
 
 export interface WorldConfig {
   bg: string;

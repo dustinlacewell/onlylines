@@ -4,7 +4,7 @@ import { MapperOptions } from './MapperOptions';
 import { MotionConfig } from './MotionConfig';
 import { DashOutput, AlphaOutput, ColorOutput, LineWidthOutput } from './outputs';
 import { useEvolverStore } from '../../../storeReact';
-import type { MotionConfig as MotionConfigType } from '../../../evolvers/system';
+import type { MotionConfig as MotionConfigType } from '../../../core/evolvers/system';
 
 type SlotKey = 'dash' | 'alpha' | 'color' | 'lineWidth';
 

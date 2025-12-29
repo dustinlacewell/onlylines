@@ -3,15 +3,15 @@
 
 import type { DashEvolver, ColorEvolver, NumberEvolver, LineContext } from './types';
 import type { DashValue } from './types';
-import type { Palette, HSL } from './palettes';
-import { palettes } from './palettes';
+import type { Palette } from '../palette';
+import { parseHSL, getPalette } from '../palette';
+import { createMapper, type Mapper } from '../registry';
 import {
   type MotionConfig,
   defaultMotionConfig,
   computeT,
   makeMapperContext,
 } from './system';
-import { getMapper } from './mapperCatalog';
 import {
   type DashOutputConfig,
   type RangeOutputConfig,
@@ -23,6 +23,11 @@ import {
   toRange,
   toLineWidth,
 } from './outputAdapters';
+
+// Helper to get a mapper from registry
+function getMapper(name: string, options?: Record<string, unknown>): Mapper {
+  return createMapper(name, options as Record<string, number>);
+}
 
 // === SLOT CONFIG TYPES ===
 
@@ -74,11 +79,21 @@ export function createDashEvolverFromConfig(config: DashSlotConfig): DashEvolver
 
 export function createColorEvolverFromConfig(config: ColorSlotConfig): ColorEvolver {
   const motion: MotionConfig = { ...defaultMotionConfig, ...config.motion };
-  const rawPalette = palettes[config.output.palette as keyof typeof palettes] ?? palettes.sunset;
-  // Convert readonly palette to mutable for Palette interface
+
+  // Get palette from registry, fall back to sunset
+  const registryPalette = getPalette(config.output.palette) ?? getPalette('sunset');
+  if (!registryPalette) {
+    throw new Error(`No palette found for "${config.output.palette}" and fallback "sunset" also missing`);
+  }
+
+  // Convert CSS color strings to HSL objects
+  const colors = registryPalette.colors.map(parseHSL);
+  if (colors.length === 0 || colors.some(c => !c)) {
+    console.error(`Palette "${registryPalette.name}" has invalid colors:`, registryPalette.colors, '-> parsed:', colors);
+  }
   const palette: Palette = {
-    name: rawPalette.name,
-    colors: rawPalette.colors.map(c => ({ h: c.h, s: c.s, l: c.l })) as HSL[],
+    name: registryPalette.name,
+    colors,
   };
   const mapper = getMapper(config.mapper, config.mapperOptions);
 
@@ -88,6 +103,10 @@ export function createColorEvolverFromConfig(config: ColorSlotConfig): ColorEvol
       const t = computeT(motion, ctx.index, ctx.total, ctx.time);
       const mapperCtx = makeMapperContext(t, ctx.index, ctx.total, ctx.time, ctx.line);
       const value = mapper(mapperCtx);
+      if (!Number.isFinite(value)) {
+        console.warn(`Mapper "${config.mapper}" returned ${value} for t=${t}, index=${ctx.index}, total=${ctx.total}`);
+        return 'white';
+      }
       return toColor(value, palette, ctx.line.alpha);
     },
   };

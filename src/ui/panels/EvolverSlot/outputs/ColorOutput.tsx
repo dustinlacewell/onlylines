@@ -1,5 +1,5 @@
 import { Select, Row, Subsection } from '../../../design';
-import { palettes } from '../../../../evolvers/palettes';
+import { getAllPalettes } from '../../../../core/palette';
 import type { ColorOutput as ColorOutputType } from '../../../../store';
 
 export interface ColorOutputProps {
@@ -7,7 +7,7 @@ export interface ColorOutputProps {
   onChange: (updates: Partial<ColorOutputType>) => void;
 }
 
-const paletteNames = Object.keys(palettes);
+const paletteNames = getAllPalettes();
 
 export function ColorOutput({ output, onChange }: ColorOutputProps) {
   return (
@@ -15,7 +15,7 @@ export function ColorOutput({ output, onChange }: ColorOutputProps) {
       <Row label="Palette">
         <Select
           value={output.palette}
-          options={paletteNames}
+          options={paletteNames.map(p => p.name)}
           onChange={(v) => onChange({ palette: v })}
         />
       </Row>

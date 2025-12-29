@@ -23,5 +23,8 @@ export const spotLinear = registerMapper({
     width: [0.1, 0.4],
   },
 
-  create: ({ width }) => (ctx) => Math.max(0, 1 - ctx.t / width),
+  create: ({ width }) => {
+    const safeWidth = Math.max(0.001, width);
+    return (ctx) => Math.max(0, 1 - ctx.t / safeWidth);
+  },
 });

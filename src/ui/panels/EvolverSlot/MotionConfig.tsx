@@ -1,6 +1,6 @@
 import React from 'react';
 import { Slider, Select, Checkbox, Row, Subsection, Tooltip } from '../../design';
-import type { MotionConfig as MotionConfigType, MotionMode, EdgeBehavior } from '../../../evolvers/system';
+import type { MotionConfig as MotionConfigType, MotionMode, EdgeBehavior } from '../../../core/evolvers/system';
 
 export interface MotionConfigProps {
   motion: Partial<MotionConfigType>;

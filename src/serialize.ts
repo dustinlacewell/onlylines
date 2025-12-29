@@ -16,10 +16,9 @@ import {
   getMoverById,
   getMapper,
   getMapperById,
-  getPalette,
-  getPaletteById,
   schemaToParamDefs,
 } from './core';
+import { getPalette, getPaletteById } from './core/palette';
 
 import type { ParamType } from './paramTypes';
 import * as P from './paramTypes';
@@ -28,13 +27,15 @@ import type { EvolverState, SlotState, DashOutput, RangeOutput, ColorOutput } fr
 export type ParamDef = [string, ParamType];
 
 // Motion parameters (internal to serialize.ts)
+// Must match MotionConfig in evolvers/system.ts
 export const motionParamDefs: ParamDef[] = [
   ['mode', P.enumType(3)],      // field=0, focal=1, spread=2
   ['edge', P.enumType(2)],      // wrap=0, bounce=1
   ['speed', P.speed],
-  ['intensity', P.unit],
-  ['detail', P.unit],
   ['reversed', P.bool],
+  ['phaseSpread', P.unit],
+  ['phaseOffset', P.unit],
+  ['waves', P.scale5],          // 0-5 range for wave multiplier
   ['alternate', P.bool],
 ];
 

@@ -40,6 +40,9 @@ export const pulse = registerMapper({
     sharpness: [1, 4],
   },
 
-  create: ({ center, width, sharpness }) => (ctx) =>
-    Math.exp(-Math.pow((ctx.t - center) / width, sharpness * 2)),
+  create: ({ center, width, sharpness }) => {
+    // Guard against division by zero
+    const safeWidth = Math.max(0.001, width);
+    return (ctx) => Math.exp(-Math.pow((ctx.t - center) / safeWidth, sharpness * 2));
+  },
 });

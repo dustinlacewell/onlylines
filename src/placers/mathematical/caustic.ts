@@ -21,7 +21,7 @@ export const caustic = registerPlacer({
 
   params: {
     sourceEdge: {
-      type: 'smallInt',
+      type: 'byte',
       default: 0,
       min: 0,
       max: 3,

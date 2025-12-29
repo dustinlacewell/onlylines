@@ -2,12 +2,12 @@
 // Uses zustand's React integration
 
 import { create } from 'zustand';
-import { type MotionConfig, type MotionMode, type EdgeBehavior } from './evolvers/system';
+import { type MotionConfig, type MotionMode, type EdgeBehavior } from './core/evolvers/system';
 import {
   type WorldEvolverConfig,
   presets,
   type PresetName,
-} from './evolvers/evolverFactory';
+} from './core/evolvers/evolverFactory';
 import { rand, randInt, pick, pickW, newSeed, setSeed } from './random';
 import type { PositionEvolverState, DistributionState } from './serialize';
 
@@ -21,11 +21,12 @@ import './palettes';
 import {
   getAllMovers,
   getAllMappers,
-  getAllPalettes,
   getAllPlacers,
   randomizeMover,
   randomizePlacer,
+  randomizeMapper,
 } from './core';
+import { getAllPalettes } from './core/palette';
 
 const mapperNames = getAllMappers().map(m => m.name);
 const paletteNames = getAllPalettes().map(p => p.name);
@@ -47,10 +48,11 @@ function randomMotion(): Partial<MotionConfig> {
 }
 
 function randomDashSlot(): SlotState<DashOutput> {
+  const mapper = pick(mapperNames);
   return {
     enabled: pick([true, false]),
-    mapper: pick(mapperNames),
-    mapperOptions: { frequency: rand(0.5, 3) },
+    mapper,
+    mapperOptions: randomizeMapper(mapper),
     motion: randomMotion(),
     output: {
       dashLen: Math.round(rand(5, 25)),
@@ -61,10 +63,11 @@ function randomDashSlot(): SlotState<DashOutput> {
 }
 
 function randomAlphaSlot(): SlotState<RangeOutput> {
+  const mapper = pick(mapperNames);
   return {
     enabled: pick([true, false]),
-    mapper: pick(mapperNames),
-    mapperOptions: { frequency: rand(0.5, 2) },
+    mapper,
+    mapperOptions: randomizeMapper(mapper),
     motion: randomMotion(),
     output: {
       min: rand(0.1, 0.4),
@@ -74,10 +77,11 @@ function randomAlphaSlot(): SlotState<RangeOutput> {
 }
 
 function randomColorSlot(): SlotState<ColorOutput> {
+  const mapper = pick(mapperNames);
   return {
     enabled: true, // Color always enabled
-    mapper: pick(mapperNames),
-    mapperOptions: {},
+    mapper,
+    mapperOptions: randomizeMapper(mapper),
     motion: randomMotion(),
     output: {
       palette: pick(paletteNames),
@@ -86,10 +90,11 @@ function randomColorSlot(): SlotState<ColorOutput> {
 }
 
 function randomLineWidthSlot(): SlotState<RangeOutput> {
+  const mapper = pick(mapperNames);
   return {
     enabled: pick([true, false]),
-    mapper: pick(mapperNames),
-    mapperOptions: { frequency: rand(0.5, 2) },
+    mapper,
+    mapperOptions: randomizeMapper(mapper),
     motion: randomMotion(),
     output: {
       min: rand(0.3, 1),

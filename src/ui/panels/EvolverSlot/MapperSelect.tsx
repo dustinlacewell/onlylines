@@ -1,6 +1,6 @@
 import { Select, Row, Tooltip } from '../../design';
 import type { SelectGroup } from '../../design';
-import { getMappersByCategory, getMapperMeta } from '../../../evolvers/mapperCatalog';
+import { getMapperNamesByCategory, getMapper } from '../../../core';
 
 export interface MapperSelectProps {
   value: string;
@@ -8,8 +8,8 @@ export interface MapperSelectProps {
 }
 
 export function MapperSelect({ value, onChange }: MapperSelectProps) {
-  const mappersByCategory = getMappersByCategory();
-  const meta = getMapperMeta(value);
+  const mappersByCategory = getMapperNamesByCategory();
+  const def = getMapper(value);
 
   const groups: SelectGroup[] = Object.entries(mappersByCategory).map(
     ([category, mappers]) => ({
@@ -18,8 +18,8 @@ export function MapperSelect({ value, onChange }: MapperSelectProps) {
     })
   );
 
-  const tooltip = meta
-    ? `${meta.name}: ${meta.description}`
+  const tooltip = def
+    ? `${def.name}: ${def.description ?? ''}`
     : 'Select a mapper function';
 
   return (
