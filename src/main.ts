@@ -117,14 +117,16 @@ function init(): void {
       setURLFromState(state);
     }
 
-    // Check if distribution/position/lineCount changed (requires world regeneration)
+    // Check what changed
     const distJson = JSON.stringify(state.distribution);
     const distChanged = distJson !== prevDistributionJson;
+    const lineCountChanged = state.lineCount !== prevLineCount;
     const posJson = JSON.stringify(state.positionEvolvers);
     const posChanged = posJson !== prevPositionEvolversJson;
-    const lineCountChanged = state.lineCount !== prevLineCount;
 
-    if (distChanged || posChanged || lineCountChanged) {
+    // Any change to distribution, line count, or position evolvers requires full rebuild
+    // (position evolver params affect line positions, so changing mid-sim breaks reproducibility)
+    if (distChanged || lineCountChanged || posChanged) {
       prevDistributionJson = distJson;
       prevPositionEvolversJson = posJson;
       prevLineCount = state.lineCount;

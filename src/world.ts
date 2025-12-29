@@ -7,6 +7,8 @@ import {
   createEvolversFromConfig,
 } from './core/evolvers/evolverFactory';
 import { evolverStoreApi } from './storeReact';
+import { createMover } from './movers';
+import type { PositionEvolverState } from './serialize';
 
 export class World implements IWorld {
   time = 0;
@@ -38,6 +40,17 @@ export class World implements IWorld {
     if (this.storeUnsubscribe) {
       this.storeUnsubscribe();
       this.storeUnsubscribe = null;
+    }
+  }
+
+  /** Rebuild position evolvers without recreating lines (for param-only changes) */
+  rebuildPositionEvolvers(positionStates: PositionEvolverState[]): void {
+    this.evolvers.position = [];
+    for (const posState of positionStates) {
+      const evolver = createMover(posState.type, posState.params ?? {});
+      if (evolver) {
+        this.evolvers.position.push(evolver);
+      }
     }
   }
 

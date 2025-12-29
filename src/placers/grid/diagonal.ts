@@ -29,26 +29,49 @@ export const diagonal = registerPlacer({
     const width = options.lineWidth ?? 1;
     const dir = pick([-1, 1]);
 
+    // Perimeter: 0-1 top (L→R), 1-2 right (T→B), 2-3 bottom (R→L), 3-4 left (B→T)
+    //
+    // For TL→BR diagonals:
+    //   First half:  epA: 1→2 (top-right to right-bottom), epB: 2→1 (bottom-right to top-right) - OPPOSITE
+    //   Second half: epA: 4→3 (left-top to left-bottom), epB: 2→3 (bottom-right to bottom-left)
+
     return Array.from({ length: count }, (_, i) => {
       const t = (i + 0.5) / count;
+      const d = t * 2;  // 0 to 2
 
       if (direction > 0) {
-        const startT = t * 2;
-        const p0 = startT < 1
-          ? 3 + (1 - startT)
-          : startT - 1;
-        const p1 = startT < 1
-          ? 2 + startT
-          : 1 + (startT - 1);
+        // TL→BR diagonals
+        // Sweep from TR corner to BL corner (continuous indexing)
+        // First half (reversed): A: 1→0, B: 1→2 (diverge from TR corner)
+        // Second half: A: 4→3, B: 2→3 (approach BL corner)
+        let p0: number, p1: number;
+
+        if (d < 1) {
+          p0 = 1 - d;          // 1→0
+          p1 = 1 + d;          // 1→2
+        } else {
+          const s = d - 1;
+          p0 = 4 - s;          // 4→3
+          p1 = 2 + s;          // 2→3
+        }
+
         return makeLine(p0, p1, speed, dir, width);
       } else {
-        const startT = t * 2;
-        const p0 = startT < 1
-          ? startT
-          : 1 + (startT - 1);
-        const p1 = startT < 1
-          ? 3 + (1 - startT)
-          : 2 + startT;
+        // TR→BL diagonals (mirror)
+        // Sweep from TL corner to BR corner (continuous indexing)
+        // First half (reversed): A: 0→1, B: 4→3 (diverge from TL corner)
+        // Second half: A: 1→2, B: 3→2 (approach BR corner)
+        let p0: number, p1: number;
+
+        if (d < 1) {
+          p0 = d;              // 0→1
+          p1 = 4 - d;          // 4→3
+        } else {
+          const s = d - 1;
+          p0 = 1 + s;          // 1→2
+          p1 = 3 - s;          // 3→2
+        }
+
         return makeLine(p0, p1, speed, dir, width);
       }
     });
