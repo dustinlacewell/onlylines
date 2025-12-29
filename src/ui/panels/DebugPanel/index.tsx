@@ -20,6 +20,16 @@ const tabs: Tab[] = [
 
 const panelStyles = `
   ${baseStyles}
+
+  .debug-panel-container {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    z-index: 1000;
+  }
 `;
 
 export function DebugPanel() {
@@ -51,21 +61,23 @@ export function DebugPanel() {
     <>
       <style>{panelStyles}</style>
       <WelcomeModal />
-      <HelpButton />
-      <div className={`debug-panel ${isPanelCollapsed ? 'collapsed' : ''}`}>
-        <Header
-          title="SYSTEM DEBUG"
-          collapsed={isPanelCollapsed}
-          onToggleCollapse={togglePanelCollapsed}
-        />
-        {!isPanelCollapsed && (
-          <div className="debug-body">
-            <GlobalControls />
-            <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
-            {renderTabContent()}
-            <ActionButtons />
-          </div>
-        )}
+      <div className="debug-panel-container">
+        <div className={`debug-panel ${isPanelCollapsed ? 'collapsed' : ''}`}>
+          <Header
+            title="SYSTEM DEBUG"
+            collapsed={isPanelCollapsed}
+            onToggleCollapse={togglePanelCollapsed}
+          />
+          {!isPanelCollapsed && (
+            <div className="debug-body">
+              <GlobalControls />
+              <Tabs tabs={tabs} activeTab={activeTab} onTabChange={setActiveTab} />
+              {renderTabContent()}
+              <ActionButtons />
+            </div>
+          )}
+        </div>
+        <HelpButton />
       </div>
     </>
   );

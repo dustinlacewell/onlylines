@@ -13,6 +13,7 @@ export const colors = {
   success: '#0a0',          // Green - success states (copied, etc.)
 
   // Backgrounds
+  bgPanelOuter: 'rgba(0, 0, 0, 0.95)',  // Main panel background
   bgPanel: '#111',          // Panel background
   bgSection: '#1a1a1a',     // Section/subsection background
   bgInput: '#333',          // Input/slider background

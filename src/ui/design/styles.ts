@@ -1,7 +1,8 @@
 // Shared styles and CSS variables for the debug UI
+import { colors } from './colors';
 
 export const cssVariables = `
-  --debug-bg: rgba(0, 0, 0, 0.95);
+  --debug-bg: ${colors.bgPanelOuter};
   --debug-bg-section: #111;
   --debug-bg-subsection: #1a1a1a;
   --debug-border: #333;
@@ -36,9 +37,6 @@ export const cssVariables = `
 export const baseStyles = `
   .debug-panel {
     ${cssVariables}
-    position: fixed;
-    top: 10px;
-    left: 10px;
     width: 380px;
     max-height: calc(100vh - 20px);
     overflow-y: auto;
@@ -48,7 +46,6 @@ export const baseStyles = `
     font-size: 11px;
     padding: 12px;
     box-sizing: border-box;
-    z-index: 1000;
     border: 1px solid var(--debug-border);
     border-radius: 4px;
   }

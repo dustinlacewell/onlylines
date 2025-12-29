@@ -3,19 +3,15 @@ import { useUIStore } from '../uiStore';
 import { colors } from './design';
 
 const buttonStyle: React.CSSProperties = {
-  position: 'fixed',
-  top: '12px',
-  right: '12px',
-  background: colors.bgInput,
-  border: `1px solid ${colors.borderLight}`,
-  color: colors.textSecondary,
+  background: colors.bgPanelOuter,
+  border: `1px solid ${colors.borderDark}`,
+  borderRadius: '4px',
+  color: colors.accent,
   cursor: 'pointer',
-  padding: '5px',
+  padding: '12px',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  zIndex: 1000,
-  borderRadius: '3px',
 };
 
 export function HelpButton() {
@@ -34,12 +30,10 @@ export function HelpButton() {
       style={buttonStyle}
       onClick={handleClick}
       onMouseEnter={(e) => {
-        e.currentTarget.style.background = colors.bgHover;
         e.currentTarget.style.color = colors.textPrimary;
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.background = colors.bgInput;
-        e.currentTarget.style.color = colors.textSecondary;
+        e.currentTarget.style.color = colors.accent;
       }}
       title="Show welcome"
     >
