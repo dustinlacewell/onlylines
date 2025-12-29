@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
 import { ParamEditor } from './ParamEditor';
 import type { ParamDef } from '../../serialize';
+import type { RichParamDef } from '../../core';
 
 export interface EvolverCardProps {
   /** Display name of the evolver */
   name: string;
   /** Optional tooltip description */
   tooltip?: string;
-  /** Param definitions from catalog */
-  paramDefs: ParamDef[];
+  /** Param definitions from catalog - supports both legacy and rich formats */
+  paramDefs: ParamDef[] | RichParamDef[];
   /** Current param values */
   params: Record<string, number>;
   /** Called when params change */

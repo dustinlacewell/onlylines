@@ -2,7 +2,7 @@
 
 import { registerPlacer } from '../../core/registry';
 import { rand, pick, mod } from '../../utils';
-import { makeLine } from '../../distributions/utils';
+import { makeLine } from '../utils';
 
 export const parallel = registerPlacer({
   id: 18,

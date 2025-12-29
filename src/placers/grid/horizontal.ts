@@ -2,7 +2,7 @@
 
 import { registerPlacer } from '../../core/registry';
 import { rand, pick } from '../../utils';
-import { makeLine } from '../../distributions/utils';
+import { makeLine } from '../utils';
 
 export const horizontal = registerPlacer({
   id: 15,

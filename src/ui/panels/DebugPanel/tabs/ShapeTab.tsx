@@ -1,6 +1,6 @@
 import { Section, Select, Row, Tooltip, Subsection, ParamEditor, Hint } from '../../../design';
 import { useEvolverStore, type DistributionState } from '../../../../storeReact';
-import { getAllPlacers, getPlacer, schemaToParamDefs } from '../../../../core';
+import { getAllPlacers, getPlacer, schemaToRichParamDefs } from '../../../../core';
 
 const distributionNames = getAllPlacers().map(p => p.name);
 
@@ -45,7 +45,7 @@ export function ShapeTab() {
 
   const tooltip = distributionTooltips[distribution.type] || 'Select a distribution pattern';
   const def = getPlacer(distribution.type);
-  const paramDefs = def ? schemaToParamDefs(def.params) : [];
+  const paramDefs = def ? schemaToRichParamDefs(def.params) : [];
   const hasParams = paramDefs.length > 0;
 
   const handleTypeChange = (newType: string) => {
@@ -53,9 +53,9 @@ export function ShapeTab() {
     const placerDef = getPlacer(newType);
     const params: Record<string, number> = {};
     if (placerDef) {
-      const placerParamDefs = schemaToParamDefs(placerDef.params);
-      for (const [paramName, paramType] of placerParamDefs) {
-        params[paramName] = paramType.decode(128); // Middle value
+      const richParamDefs = schemaToRichParamDefs(placerDef.params);
+      for (const { name, paramType } of richParamDefs) {
+        params[name] = paramType.decode(128); // Middle value
       }
     }
     const newState: DistributionState = { type: newType, params };

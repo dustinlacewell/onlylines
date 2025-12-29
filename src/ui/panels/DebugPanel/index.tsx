@@ -6,6 +6,8 @@ import { ShapeTab, MotionTab } from './tabs';
 import { EvolverSlot } from '../EvolverSlot';
 import { baseStyles } from '../../design';
 import { useUIStore } from '../../../uiStore';
+import { WelcomeModal } from '../../WelcomeModal';
+import { HelpButton } from '../../HelpButton';
 
 const tabs: Tab[] = [
   { id: 'shape', label: 'Shape' },
@@ -48,6 +50,8 @@ export function DebugPanel() {
   return (
     <>
       <style>{panelStyles}</style>
+      <WelcomeModal />
+      <HelpButton />
       <div className={`debug-panel ${isPanelCollapsed ? 'collapsed' : ''}`}>
         <Header
           title="SYSTEM DEBUG"

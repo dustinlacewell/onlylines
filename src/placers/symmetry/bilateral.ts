@@ -2,7 +2,7 @@
 
 import { registerPlacer } from '../../core/registry';
 import { rand } from '../../utils';
-import { makeLine } from '../../distributions/utils';
+import { makeLine } from '../utils';
 
 export const bilateral = registerPlacer({
   id: 12,

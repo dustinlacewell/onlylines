@@ -28,6 +28,13 @@ const RATIONAL_SLOPES: [number, number][] = [
 // Perimeter layout: 0-1 top, 1-2 right, 2-3 bottom, 3-4 left
 function xyToPerim(x: number, y: number): number {
   const eps = 1e-9;
+  // Check corners first - they belong to two edges, pick one consistently
+  // Top-left (0,0) -> 0, Top-right (1,0) -> 1, Bottom-right (1,1) -> 2, Bottom-left (0,1) -> 3
+  if (Math.abs(x) < eps && Math.abs(y) < eps) return 0; // top-left corner
+  if (Math.abs(x - 1) < eps && Math.abs(y) < eps) return 1; // top-right corner
+  if (Math.abs(x - 1) < eps && Math.abs(y - 1) < eps) return 2; // bottom-right corner
+  if (Math.abs(x) < eps && Math.abs(y - 1) < eps) return 3; // bottom-left corner
+
   if (Math.abs(y) < eps) return x; // top edge
   if (Math.abs(x - 1) < eps) return 1 + y; // right edge
   if (Math.abs(y - 1) < eps) return 2 + (1 - x); // bottom edge
@@ -76,33 +83,30 @@ function nextBounce(
 
 // Compute bounce points analytically for a rational slope p/q starting from center
 // Returns array of perimeter positions for one complete orbit
-function computeAnalyticOrbit(p: number, q: number): number[] {
+// dirX and dirY control initial direction (-1 or 1)
+function computeAnalyticOrbit(p: number, q: number, dirX: number, dirY: number): number[] {
   const points: number[] = [];
   const numBounces = 2 * (p + q);
 
-  // Starting from center (0.5, 0.5), going toward bottom-right with slope p/q
+  // Starting from center (0.5, 0.5), going with slope p/q in the specified direction
   // The ball hits walls at predictable intervals
   //
   // Key insight: In a square billiard, we can "unfold" the reflections.
   // The ball travels in a straight line on an infinite grid of reflected squares.
   // For slope p/q, it crosses q horizontal lines and p vertical lines per period.
 
-  // From center going +x, +y with slope p/q:
-  // Time to right wall: 0.5/1 = 0.5 (in x units)
-  // Time to bottom wall: 0.5/(p/q) = 0.5*q/p (in x units)
-
   // Simulate once to get exact points, then store them
   let x = 0.5;
   let y = 0.5;
-  let vx = q; // Use integer velocity components for exact arithmetic
-  let vy = p;
+  let vx = q * dirX; // Use integer velocity components for exact arithmetic
+  let vy = p * dirY;
 
   for (let i = 0; i < numBounces; i++) {
-    // Time to hit each wall (using rationals effectively)
+    // Time to hit each wall (must be positive)
     const tRight = vx > 0 ? (1 - x) / vx : Infinity;
-    const tLeft = vx < 0 ? -x / -vx : Infinity;
+    const tLeft = vx < 0 ? x / (-vx) : Infinity;
     const tBottom = vy > 0 ? (1 - y) / vy : Infinity;
-    const tTop = vy < 0 ? -y / -vy : Infinity;
+    const tTop = vy < 0 ? y / (-vy) : Infinity;
 
     const tMin = Math.min(tRight, tLeft, tBottom, tTop);
 
@@ -175,9 +179,13 @@ export const billiard = registerPlacer({
     // This gives perfect closed loops that repeat exactly
     const usePerfectLoop = Math.abs(drift) < 0.01;
 
+    // Pick random initial direction for variety
+    const dirX = pick([-1, 1]);
+    const dirY = pick([-1, 1]);
+
     if (usePerfectLoop) {
       // Compute the exact orbit points once, then cycle through them
-      const orbitPoints = computeAnalyticOrbit(p, q);
+      const orbitPoints = computeAnalyticOrbit(p, q, dirX, dirY);
       const orbitLen = orbitPoints.length;
 
       for (let i = 0; i < count; i++) {
@@ -198,14 +206,15 @@ export const billiard = registerPlacer({
       // With drift, use simulation - floating point errors are fine
       // since we're intentionally breaking the perfect loop
       const baseTheta = Math.atan2(p, q);
-      const driftRadians = drift * 0.1 * 0.15;
+      const driftRadians = drift * 0.0015;
       const theta = baseTheta + driftRadians;
 
       const vxBase = Math.cos(theta);
       const vyBase = Math.sin(theta);
 
-      let vx = Math.abs(vxBase);
-      let vy = Math.abs(vyBase);
+      // Use the random direction, applying drift to the angle
+      let vx = Math.abs(vxBase) * dirX;
+      let vy = Math.abs(vyBase) * dirY;
 
       // First, trace from center to the first wall hit
       const firstBounce = nextBounce(0.5, 0.5, vx, vy);

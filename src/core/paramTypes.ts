@@ -35,3 +35,30 @@ export function schemaToParamDefs(
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([name, schema]) => [name, getParamType(schema.type)]);
 }
+
+// Rich param def that includes schema metadata for UI
+export interface RichParamDef {
+  name: string;
+  paramType: ParamType;
+  min?: number;
+  max?: number;
+  step?: number;
+  description?: string;
+}
+
+// Convert a params schema to rich param defs that preserve min/max/step
+// Returns entries in deterministic order (sorted by key)
+export function schemaToRichParamDefs(
+  params: Record<string, ParamSchema>
+): RichParamDef[] {
+  return Object.entries(params)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([name, schema]) => ({
+      name,
+      paramType: getParamType(schema.type),
+      min: schema.min,
+      max: schema.max,
+      step: schema.step,
+      description: schema.description,
+    }));
+}

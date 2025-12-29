@@ -61,6 +61,8 @@ export {
   paramTypeMap,
   getParamType,
   schemaToParamDefs,
+  schemaToRichParamDefs,
+  type RichParamDef,
 } from './paramTypes';
 
 export {

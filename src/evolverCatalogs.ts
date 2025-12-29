@@ -1,6 +1,6 @@
 // Evolver catalogs - separated to avoid circular dependencies
 import { rand, pick } from './random';
-import { Distributions } from './distributions/index';
+// import { Distributions } from './distributions/index';
 
 // Import evolver creators
 import * as Position from './evolvers/position';
@@ -249,9 +249,3 @@ export const dashEvolvers: EvolverEntry<DashEvolver>[] = [
     });
   } },
 ];
-
-// Dash evolver names
-export const dashEvolverNames = dashEvolvers.map(e => e.name);
-
-// Distribution names
-export const distributionNames = Object.keys(Distributions) as (keyof typeof Distributions)[];

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Section, Checkbox, Tooltip, Subsection, EvolverCard, Hint } from '../../../design';
 import { useEvolverStore, type PositionEvolverState } from '../../../../storeReact';
-import { getAllMovers, getMover, schemaToParamDefs } from '../../../../core';
+import { getAllMovers, getMover, schemaToRichParamDefs } from '../../../../core';
 
 const positionEvolverNames = getAllMovers().map(m => m.name);
 
@@ -60,8 +60,8 @@ export function MotionTab() {
       const def = getMover(name);
       const params: Record<string, number> = {};
       if (def) {
-        const paramDefs = schemaToParamDefs(def.params);
-        for (const [paramName, paramType] of paramDefs) {
+        const richParamDefs = schemaToRichParamDefs(def.params);
+        for (const { name: paramName, paramType } of richParamDefs) {
           params[paramName] = paramType.decode(128);
         }
       }
@@ -108,7 +108,7 @@ export function MotionTab() {
           ) : (
             positionEvolversSelected.map((evolver, index) => {
               const def = getMover(evolver.type);
-              const paramDefs = def ? schemaToParamDefs(def.params) : [];
+              const paramDefs = def ? schemaToRichParamDefs(def.params) : [];
               return (
                 <EvolverCard
                   key={`${evolver.type}-${index}`}
