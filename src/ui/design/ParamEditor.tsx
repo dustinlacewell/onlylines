@@ -1,5 +1,6 @@
 import React from 'react';
 import { ParamSlider } from './ParamSlider';
+import { colors } from './colors';
 import type { ParamDef } from '../../serialize';
 import type { RichParamDef } from '../../core';
 
@@ -15,7 +16,7 @@ export interface ParamEditorProps {
 
 const styles = {
   empty: {
-    color: '#444',
+    color: colors.borderMedium,
     fontStyle: 'italic',
     fontSize: '10px',
     padding: '4px 0',

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { ParamEditor } from './ParamEditor';
+import { colors } from './colors';
 import type { ParamDef } from '../../serialize';
 import type { RichParamDef } from '../../core';
 
@@ -20,8 +21,8 @@ export interface EvolverCardProps {
 
 const styles = {
   card: {
-    background: '#1a1a1a',
-    border: '1px solid #2a2a2a',
+    background: colors.bgSection,
+    border: `1px solid ${colors.borderSubtle}`,
     borderRadius: '4px',
     marginBottom: '8px',
     overflow: 'hidden',
@@ -31,7 +32,7 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: '6px 8px',
-    background: '#222',
+    background: colors.bgInput,
     cursor: 'pointer',
     userSelect: 'none',
   } as React.CSSProperties,
@@ -41,23 +42,23 @@ const styles = {
     gap: '6px',
   } as React.CSSProperties,
   chevron: {
-    color: '#666',
+    color: colors.textMuted,
     fontSize: '10px',
     transition: 'transform 0.15s',
   } as React.CSSProperties,
   name: {
-    color: '#ccc',
+    color: colors.textValue,
     fontSize: '11px',
     fontWeight: 500,
   } as React.CSSProperties,
   paramCount: {
-    color: '#555',
+    color: colors.textMuted,
     fontSize: '9px',
   } as React.CSSProperties,
   removeBtn: {
     background: 'transparent',
     border: 'none',
-    color: '#666',
+    color: colors.accent,
     cursor: 'pointer',
     padding: '2px 6px',
     fontSize: '14px',
@@ -66,7 +67,7 @@ const styles = {
   } as React.CSSProperties,
   content: {
     padding: '8px',
-    borderTop: '1px solid #2a2a2a',
+    borderTop: `1px solid ${colors.borderSubtle}`,
   } as React.CSSProperties,
 };
 
@@ -99,11 +100,6 @@ export function EvolverCard({
             </span>
           )}
           <span style={styles.name}>{name}</span>
-          {hasParams && (
-            <span style={styles.paramCount}>
-              ({paramDefs.length} param{paramDefs.length !== 1 ? 's' : ''})
-            </span>
-          )}
         </div>
         <button
           style={styles.removeBtn}

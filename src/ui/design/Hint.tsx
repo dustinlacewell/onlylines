@@ -8,8 +8,8 @@ const style: React.CSSProperties = {
   color: 'var(--debug-text-muted)',
   fontSize: '10px',
   fontStyle: 'italic',
-  marginTop: '2px',
-  marginBottom: '6px',
+  paddingTop: '3px',
+  paddingLeft: '3px',
   lineHeight: 1.3,
 };
 

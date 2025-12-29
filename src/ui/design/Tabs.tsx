@@ -1,4 +1,5 @@
 import React from 'react';
+import { colors } from './colors';
 
 export interface Tab {
   id: string;
@@ -16,7 +17,7 @@ const styles = {
     display: 'flex',
     gap: '2px',
     marginBottom: '12px',
-    borderBottom: '1px solid #333',
+    borderBottom: `1px solid ${colors.borderDark}`,
     paddingBottom: '8px',
   } as React.CSSProperties,
   tab: {
@@ -24,7 +25,7 @@ const styles = {
     background: 'transparent',
     border: 'none',
     borderBottom: '2px solid transparent',
-    color: '#666',
+    color: colors.textMuted,
     fontFamily: 'monospace',
     fontSize: '10px',
     textTransform: 'uppercase',
@@ -32,8 +33,8 @@ const styles = {
     transition: 'color 0.15s, border-color 0.15s',
   } as React.CSSProperties,
   tabActive: {
-    color: '#0aa',
-    borderBottomColor: '#0aa',
+    color: colors.accent,
+    borderBottomColor: colors.accent,
   } as React.CSSProperties,
 };
 
@@ -50,12 +51,12 @@ export function Tabs({ tabs, activeTab, onTabChange }: TabsProps) {
           }}
           onMouseEnter={(e) => {
             if (activeTab !== tab.id) {
-              e.currentTarget.style.color = '#888';
+              e.currentTarget.style.color = colors.textSecondary;
             }
           }}
           onMouseLeave={(e) => {
             if (activeTab !== tab.id) {
-              e.currentTarget.style.color = '#666';
+              e.currentTarget.style.color = colors.textMuted;
             }
           }}
         >

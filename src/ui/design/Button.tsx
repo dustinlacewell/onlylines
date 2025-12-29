@@ -1,4 +1,5 @@
 import React from 'react';
+import { colors } from './colors';
 
 export interface ButtonProps {
   children: React.ReactNode;
@@ -9,9 +10,9 @@ export interface ButtonProps {
 }
 
 const baseStyle: React.CSSProperties = {
-  background: '#333',
-  border: '1px solid #555',
-  color: '#fff',
+  background: colors.bgInput,
+  border: `1px solid ${colors.borderLight}`,
+  color: colors.textWhite,
   padding: '6px',
   fontFamily: 'monospace',
   fontSize: '10px',
@@ -20,9 +21,9 @@ const baseStyle: React.CSSProperties = {
 };
 
 const toggleStyle: React.CSSProperties = {
-  background: '#333',
-  border: '1px solid #555',
-  color: '#888',
+  background: colors.bgInput,
+  border: `1px solid ${colors.borderLight}`,
+  color: colors.textSecondary,
   padding: '2px 8px',
   fontSize: '10px',
   cursor: 'pointer',
@@ -31,9 +32,9 @@ const toggleStyle: React.CSSProperties = {
 
 const toggleActiveStyle: React.CSSProperties = {
   ...toggleStyle,
-  background: '#254',
-  borderColor: '#4a7',
-  color: '#4a7',
+  background: colors.toggleOn,
+  borderColor: colors.toggleOnBorder,
+  color: colors.toggleOnText,
 };
 
 export function Button({ children, onClick, variant = 'default', active, style }: ButtonProps) {
@@ -51,12 +52,12 @@ export function Button({ children, onClick, variant = 'default', active, style }
       style={{ ...computedStyle, ...style }}
       onMouseEnter={(e) => {
         if (variant === 'default') {
-          e.currentTarget.style.background = '#444';
+          e.currentTarget.style.background = colors.bgHover;
         }
       }}
       onMouseLeave={(e) => {
         if (variant === 'default') {
-          e.currentTarget.style.background = '#333';
+          e.currentTarget.style.background = colors.bgInput;
         }
       }}
     >

@@ -4,7 +4,7 @@ All the visuals you see here are generated using **only lines**.
 
 Specifically, *straight* lines locked to the *perimeter of the canvas*.
 
-No curves, gradients, fills, shadows, textures, no anything. Only *lines*!
+No curves, gradients, shadows, or textures. Only *__lines__*!
 
 ## Quick Start
 - Click anywhere to generate a new piece
@@ -12,5 +12,4 @@ No curves, gradients, fills, shadows, textures, no anything. Only *lines*!
 - **Motion Tab**: How endpoints move along the perimeter
 - **Color/Alpha/Width/Dash Tabs**: Animated visual effects
 
-
-*Click anywhere to dismiss*
+**BTW**: The parameter space is huge, so randomly generating patterns can produce a lot of duds. Use the UI to make something cool!

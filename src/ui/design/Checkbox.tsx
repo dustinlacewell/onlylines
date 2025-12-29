@@ -1,4 +1,5 @@
 import React from 'react';
+import { colors } from './colors';
 
 export interface CheckboxProps {
   label: string;
@@ -14,7 +15,7 @@ const styles = {
     cursor: 'pointer',
   } as React.CSSProperties,
   label: {
-    color: '#888',
+    color: colors.textSecondary,
     fontSize: '10px',
     userSelect: 'none',
   } as React.CSSProperties,
@@ -30,15 +31,15 @@ const styles = {
     flexShrink: 0,
   } as React.CSSProperties,
   boxUnchecked: {
-    background: '#1a1a1a',
-    borderColor: '#333',
+    background: colors.bgSection,
+    borderColor: colors.borderDark,
   } as React.CSSProperties,
   boxChecked: {
-    background: '#0aa',
-    borderColor: '#0aa',
+    background: colors.accent,
+    borderColor: colors.accent,
   } as React.CSSProperties,
   check: {
-    color: '#000',
+    color: colors.textBlack,
     fontSize: '10px',
     fontWeight: 'bold',
     lineHeight: 1,

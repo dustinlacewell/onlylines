@@ -1,4 +1,5 @@
 import React from 'react';
+import { colors } from './colors';
 
 export interface SectionProps {
   title: string;
@@ -11,8 +12,8 @@ const styles = {
   section: {
     marginBottom: '12px',
     padding: '10px',
-    background: '#111',
-    border: '1px solid #333',
+    background: colors.bgPanel,
+    border: `1px solid ${colors.borderDark}`,
     borderRadius: '4px',
   } as React.CSSProperties,
   sectionDisabled: {
@@ -26,23 +27,23 @@ const styles = {
   } as React.CSSProperties,
   title: {
     fontWeight: 'bold',
-    color: '#0aa',
+    color: colors.accent,
     textTransform: 'uppercase',
     fontSize: '10px',
   } as React.CSSProperties,
   toggle: {
-    background: '#333',
-    border: '1px solid #555',
-    color: '#888',
+    background: colors.bgInput,
+    border: `1px solid ${colors.borderLight}`,
+    color: colors.textSecondary,
     padding: '2px 8px',
     fontSize: '10px',
     cursor: 'pointer',
     borderRadius: '2px',
   } as React.CSSProperties,
   toggleEnabled: {
-    background: '#254',
-    borderColor: '#4a7',
-    color: '#4a7',
+    background: colors.toggleOn,
+    borderColor: colors.toggleOnBorder,
+    color: colors.toggleOnText,
   } as React.CSSProperties,
   content: {
     pointerEvents: 'auto',

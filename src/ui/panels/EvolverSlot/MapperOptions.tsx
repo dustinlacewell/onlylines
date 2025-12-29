@@ -1,5 +1,5 @@
 import React from 'react';
-import { Slider, Subsection } from '../../design';
+import { Slider, Subsection, colors } from '../../design';
 import { getMapper, schemaToRichParamDefs } from '../../../core';
 
 export interface MapperOptionsProps {
@@ -9,7 +9,7 @@ export interface MapperOptionsProps {
 }
 
 const emptyStyle: React.CSSProperties = {
-  color: '#444',
+  color: colors.borderMedium,
   fontStyle: 'italic',
 };
 

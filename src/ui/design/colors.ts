@@ -2,6 +2,8 @@
 
 export const colors = {
   // Text colors
+  textBlack: '#000',        // Black - for contrast on light backgrounds
+  textWhite: '#fff',        // White - main text
   textPrimary: '#0ff',      // Cyan - main titles, active elements
   textSecondary: '#888',    // Gray - labels, inactive text
   textMuted: '#555',        // Dark gray - hints, disabled

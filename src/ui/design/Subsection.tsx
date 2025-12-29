@@ -1,4 +1,5 @@
 import React from 'react';
+import { colors } from './colors';
 
 export interface SubsectionProps {
   title: string;
@@ -9,12 +10,12 @@ const styles = {
   container: {
     marginTop: '8px',
     padding: '6px',
-    background: '#1a1a1a',
-    border: '1px solid #2a2a2a',
+    background: colors.bgSection,
+    border: `1px solid ${colors.borderSubtle}`,
     borderRadius: '3px',
   } as React.CSSProperties,
   title: {
-    color: '#555',
+    color: colors.accent,
     fontSize: '9px',
     textTransform: 'uppercase',
     marginBottom: '6px',

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Section, Checkbox, Tooltip, Subsection, EvolverCard, Hint } from '../../../design';
+import { Section, Checkbox, Tooltip, Subsection, EvolverCard, Hint, colors } from '../../../design';
 import { useEvolverStore, type PositionEvolverState } from '../../../../storeReact';
 import { getAllMovers, getMover, schemaToRichParamDefs } from '../../../../core';
 
@@ -40,7 +40,7 @@ const styles = {
     marginTop: '12px',
   } as React.CSSProperties,
   empty: {
-    color: '#444',
+    color: colors.borderMedium,
     fontStyle: 'italic',
     fontSize: '10px',
     padding: '8px 0',
@@ -87,6 +87,7 @@ export function MotionTab() {
   return (
     <>
       <Section title="Motions">
+        <Hint>Multiple motions can be active simultaneously</Hint>
         <div style={styles.grid}>
           {positionEvolverNames.map((name) => (
             <Tooltip key={name} content={positionTooltips[name] || name}>
@@ -98,7 +99,6 @@ export function MotionTab() {
             </Tooltip>
           ))}
         </div>
-        <Hint>Multiple evolvers can be active simultaneously</Hint>
       </Section>
 
       <div style={styles.activeSection}>

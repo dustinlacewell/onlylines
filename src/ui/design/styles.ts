@@ -3,35 +3,35 @@ import { colors } from './colors';
 
 export const cssVariables = `
   --debug-bg: ${colors.bgPanelOuter};
-  --debug-bg-section: #111;
-  --debug-bg-subsection: #1a1a1a;
-  --debug-border: #333;
-  --debug-border-light: #444;
-  --debug-border-subsection: #2a2a2a;
+  --debug-bg-section: ${colors.bgPanel};
+  --debug-bg-subsection: ${colors.bgSection};
+  --debug-border: ${colors.borderDark};
+  --debug-border-light: ${colors.borderMedium};
+  --debug-border-subsection: ${colors.borderSubtle};
 
-  --debug-text: #fff;
-  --debug-text-muted: #888;
-  --debug-text-dim: #555;
-  --debug-text-accent: #0ff;
-  --debug-text-section: #0aa;
+  --debug-text: ${colors.textWhite};
+  --debug-text-muted: ${colors.textSecondary};
+  --debug-text-dim: ${colors.textMuted};
+  --debug-text-accent: ${colors.textPrimary};
+  --debug-text-section: ${colors.accent};
 
-  --debug-btn-bg: #333;
-  --debug-btn-border: #555;
-  --debug-btn-hover: #444;
+  --debug-btn-bg: ${colors.bgInput};
+  --debug-btn-border: ${colors.borderLight};
+  --debug-btn-hover: ${colors.bgHover};
 
-  --debug-toggle-on-bg: #254;
-  --debug-toggle-on-border: #4a7;
-  --debug-toggle-on-text: #4a7;
+  --debug-toggle-on-bg: ${colors.toggleOn};
+  --debug-toggle-on-border: ${colors.toggleOnBorder};
+  --debug-toggle-on-text: ${colors.toggleOnText};
 
-  --debug-input-bg: #222;
-  --debug-input-border: #444;
-  --debug-input-focus: #0ff;
+  --debug-input-bg: ${colors.bgInput};
+  --debug-input-border: ${colors.borderMedium};
+  --debug-input-focus: ${colors.textPrimary};
 
-  --debug-slider-track: #333;
-  --debug-slider-thumb: #0aa;
+  --debug-slider-track: ${colors.bgInput};
+  --debug-slider-thumb: ${colors.accent};
 
-  --debug-tab-active: #0aa;
-  --debug-tab-inactive: #444;
+  --debug-tab-active: ${colors.accent};
+  --debug-tab-inactive: ${colors.borderMedium};
 `;
 
 export const baseStyles = `
@@ -54,10 +54,10 @@ export const baseStyles = `
     width: 6px;
   }
   .debug-panel::-webkit-scrollbar-track {
-    background: #111;
+    background: ${colors.bgPanel};
   }
   .debug-panel::-webkit-scrollbar-thumb {
-    background: #444;
+    background: ${colors.borderMedium};
     border-radius: 3px;
   }
 

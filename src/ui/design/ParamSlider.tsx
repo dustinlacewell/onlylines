@@ -1,6 +1,7 @@
 import React from 'react';
 import type { ParamType } from '../../paramTypes';
 import * as P from '../../paramTypes';
+import { colors } from './colors';
 
 export interface ParamSliderProps {
   label: string;
@@ -75,7 +76,7 @@ const styles = {
   } as React.CSSProperties,
   label: {
     width: '70px',
-    color: '#888',
+    color: colors.textSecondary,
     flexShrink: 0,
     fontSize: '10px',
   } as React.CSSProperties,
@@ -84,14 +85,14 @@ const styles = {
     height: '4px',
     WebkitAppearance: 'none',
     appearance: 'none',
-    background: '#333',
+    background: colors.bgInput,
     borderRadius: '2px',
     cursor: 'pointer',
   } as React.CSSProperties,
   value: {
     width: '40px',
     textAlign: 'right',
-    color: '#aaa',
+    color: colors.textValue,
     fontSize: '10px',
   } as React.CSSProperties,
 };
@@ -102,14 +103,14 @@ const thumbStyles = `
     -webkit-appearance: none;
     width: 12px;
     height: 12px;
-    background: #0aa;
+    background: ${colors.accent};
     border-radius: 50%;
     cursor: pointer;
   }
   .param-slider::-moz-range-thumb {
     width: 12px;
     height: 12px;
-    background: #0aa;
+    background: ${colors.accent};
     border-radius: 50%;
     cursor: pointer;
     border: none;

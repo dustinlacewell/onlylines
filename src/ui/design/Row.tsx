@@ -1,4 +1,5 @@
 import React from 'react';
+import { colors } from './colors';
 
 export interface RowProps {
   label: string;
@@ -14,7 +15,7 @@ const styles = {
   } as React.CSSProperties,
   label: {
     width: '65px',
-    color: '#888',
+    color: colors.textSecondary,
     flexShrink: 0,
     fontSize: '10px',
   } as React.CSSProperties,

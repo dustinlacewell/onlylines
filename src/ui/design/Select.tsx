@@ -1,4 +1,5 @@
 import React from 'react';
+import { colors } from './colors';
 
 export interface SelectOption {
   value: string;
@@ -21,9 +22,9 @@ export interface SelectProps {
 const styles = {
   select: {
     flex: 1,
-    background: '#222',
-    color: '#fff',
-    border: '1px solid #444',
+    background: colors.bgInput,
+    color: colors.textWhite,
+    border: `1px solid ${colors.borderMedium}`,
     padding: '3px 5px',
     fontFamily: 'monospace',
     fontSize: '10px',
